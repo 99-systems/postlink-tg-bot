@@ -5,6 +5,7 @@ async def main():
    await app.run()
 
 if __name__=='__main__':
+    import src.database.main
     try:
         asyncio.run(main())
     except Exception as e:

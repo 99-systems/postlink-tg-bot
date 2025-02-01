@@ -13,6 +13,8 @@ from src.handlers import main as main_handler, auth as auth_handler
 
 
 async def run():
+    
+
     bot = Bot(token=env.bot_token)
 
     storage = MemoryStorage()
