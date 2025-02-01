@@ -2,10 +2,9 @@ import asyncio
 import src.app as app
 
 async def main():
-   await app.run()
+    await app.run()
 
 if __name__=='__main__':
-    import src.database.main
     try:
         asyncio.run(main())
     except Exception as e:

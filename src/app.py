@@ -27,7 +27,8 @@ async def run():
         main_handler.router,
         auth_handler.router
     )
-
+    
+    
     try:
         asyncio.run(await dp.start_polling(bot))
     except Exception as e:
