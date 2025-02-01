@@ -1,8 +1,5 @@
 import asyncio
-from aiogram.fsm.context import FSMContext
-from aiogram import Bot, Dispatcher, Router, F
-from aiogram.filters import Command, CommandStart
-from aiogram.types import Message, CallbackQuery
+from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
 import src.config.env_config as env
@@ -13,7 +10,6 @@ from src.handlers import main as main_handler, auth as auth_handler
 
 
 async def run():
-    
 
     bot = Bot(token=env.bot_token)
 
@@ -27,9 +23,9 @@ async def run():
         main_handler.router,
         auth_handler.router
     )
-    
-    
+        
     try:
+        print('Bot is running')
         asyncio.run(await dp.start_polling(bot))
     except Exception as e:
         print(f'app.py error while polling bot: {e}')

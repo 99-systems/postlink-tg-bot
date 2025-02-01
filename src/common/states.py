@@ -7,6 +7,7 @@ class AppState(StatesGroup):
 class RegistrationState(StatesGroup):
     name = State()
     city = State()
+    city_confirmation = State()
     phone = State()
 
 class LoginState(StatesGroup):
