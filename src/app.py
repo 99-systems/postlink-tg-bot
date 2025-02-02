@@ -24,6 +24,15 @@ async def run():
         auth_handler.router
     )
         
+
+    
+    from src.database.connection import engine, SessionLocal
+    from src.database.models.user import User, TelegramUser
+    from src.database.connection import init_db
+
+    init_db()
+
+
     try:
         print('Bot is running')
         asyncio.run(await dp.start_polling(bot))

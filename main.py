@@ -1,5 +1,5 @@
 import asyncio
-import src.app as app
+from src import app
 
 async def main():
     await app.run()
