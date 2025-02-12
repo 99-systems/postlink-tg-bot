@@ -7,7 +7,7 @@ from src.common.states import RegistrationState
 import src.context as context
 
 
-from src.common.states import AppState, RegistrationState
+from src.common.states import AppState, RegistrationState, LoginState
 from src.common import keyboard as kb
 
 from src.database.models import crud
@@ -18,10 +18,56 @@ router = Router()
 
 # TODO: Ошибка с хранением данных в состоянии FSM
 
+async def after_auth(message: Message, state: FSMContext):
+    await state.set_state(AppState.menu)
+    await message.answer('Вы успешно авторизовались')
+    await message.answer('Что вас интересует?', reply_markup=kb.main_menu_reply_mu)
+    await state.set_state(AppState.menu)
+
+
+@router.message(or_f(F.text.lower() == 'выход', Command('exit')))
+async def exit(message: Message, state: FSMContext):
+    try:
+        exit_user = crud.delete_user_telegram(db, tg_id=message.from_user.id)
+    except Exception as e:
+        await message.answer('Ошибка при выходе из системы')
+        print(e)
+        return
+    await message.answer('Вы вышли из аккаунта', reply_markup=kb.start_reply_mu)
+    await state.set_state(AppState.initial)
+
+
 @router.message(AppState.initial, or_f(F.text.lower() == 'логин', Command('login')))
 async def login(message: Message, state: FSMContext):
-    await message.reply('Сработал логин')
+    await state.set_state(LoginState.phone)
+    await message.answer('Напишите ваш сотовый номер телефона', reply_markup=kb.phone_reply_mu)
 
+    
+@router.message(LoginState.phone)
+async def handle_phone(message: Message, state: FSMContext):
+    await state.update_data(phone =  message.contact.phone_number)
+    data = await state.get_data()  
+    user = crud.get_user_by_phone(db, data['phone'])
+    if not user:
+        await message.reply('Пользователя с таким номером телефона не найден, попробуйте зарегистрироваться')
+        await state.set_state({}) 
+        await back_to_start(message, state)
+        return
+    
+    
+    await message.reply('Сообщите 3-х значный код отправленный вам на WhatsApp' + data['phone'], reply_markup=ReplyKeyboardRemove())
+    
+    try: 
+        create_tg_user = crud.add_user_telegram(db, tg_id=message.from_user.id, username=message.from_user.username, user_id=user.id)
+    except Exception as e:
+        await message.reply('Ошибка при добавлении пользователя')
+        print(e)
+        await back_to_start(message, state)
+        return
+
+    await after_auth(message, state)
+
+    
 
 @router.message(AppState.initial, or_f(F.text.lower() == 'регистрация', Command('register')))   
 async def registration(message: Message, state: FSMContext):
@@ -92,16 +138,24 @@ async def handle_phone(message: Message, state: FSMContext):
     
 
     if crud.is_user_phone_exists(db, data['phone']):
-        await message.reply('Пользователь с таким номером телефона уже существует')
+        await message.reply('Пользователь с таким номером телефона уже существует, попробуйте войти')
         await state.set_state({})
         await back_to_start(message, state)
         return
 
-    user = crud.create_user(
-        db, tg_id=message.from_user.id, username=message.from_user.username,
-        name=data['name'], phone=data['phone'], city=data['city']
-        )
+    try:
+        user = crud.create_user(
+            db, tg_id=message.from_user.id, username=message.from_user.username,
+            name=data['name'], phone=data['phone'], city=data['city']
+            )
+    except Exception as e:
+        await message.reply('Ошибка при регистрации пользователя')
+        print(e)
+        await back_to_start(message, state)
+        return
     
     await state.set_state({})
 
     await message.reply(f'Пользователь {user.name} успешно добавлен')
+
+    await after_auth(message, state)

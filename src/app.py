@@ -18,8 +18,8 @@ async def run():
     main_handler.router.include_router(menu_handler.router)
     
     dp.include_routers(
-        main_handler.router,
         auth_handler.router,
+        main_handler.router,
     )
         
 

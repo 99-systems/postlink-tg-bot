@@ -15,7 +15,8 @@ class User(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))  
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
-    telegram_users = relationship("TelegramUser", back_populates="user", cascade="all, delete-orphan")
+    telegram_user = relationship("TelegramUser", back_populates="user", uselist=False)
+
 
 class TelegramUser(Base):
     __tablename__ = "telegram_users" 
@@ -23,6 +24,7 @@ class TelegramUser(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     telegram = Column(Integer, unique=True, nullable=False, index=True)
     username = Column(String, nullable=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE")) 
 
-    user = relationship("User", back_populates="telegram_users")
+
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    user = relationship("User", back_populates="telegram_user", uselist=False)

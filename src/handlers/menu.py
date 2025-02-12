@@ -6,7 +6,7 @@ from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
 
 from src.common.states import AppState, SupportState
 from src.handlers.support import support_problems
-
+from src.common import keyboard as kb
 
 router = Router()
 
@@ -42,9 +42,4 @@ async def deliver_parcel(message: Message, state: FSMContext):
     
 @router.message(AppState.menu)
 async def menu(message: Message, state: FSMContext):
-    
-    
-    keyboard = [[KeyboardButton(text='Отправить посылку')], [KeyboardButton(text='Доставить посылку')], [KeyboardButton(text='Служба поддержки')]]
-    reply_markup = ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
-    
-    await message.reply('Что вас интересует?', reply_markup=reply_markup)
+    await message.reply('Что вас интересует?', reply_markup=kb.main_menu_reply_mu)

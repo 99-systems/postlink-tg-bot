@@ -17,4 +17,6 @@ class RegistrationState(StatesGroup):
     phone = State()
 
 class LoginState(StatesGroup):
-    pass
+    phone = State()
+    code = State()
+    code_confirmation = State()

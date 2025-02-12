@@ -26,12 +26,25 @@ def create_user(db: Session, tg_id: int, name: str, phone: str, city: str, code:
 def is_user_phone_exists(db: Session, phone: int) -> bool:
     return db.query(User).filter(User.phone == phone).count() > 0
 
+def get_user_by_phone(db: Session, phone: int) -> User:
+    return db.query(User).filter(User.phone == phone).first()
+
 def add_user_telegram(db: Session, user_id: int, tg_id: int, username: str = None):
     user = db.query(User).filter(User.id == user_id).first()
-    user.telegram_users.append(TelegramUser(telegram=tg_id, username=username))
+    if not user:
+        return None
+
+    telegram_user = TelegramUser(user_id=user.id, telegram=tg_id, username=username)
+    db.add(telegram_user)
     db.commit()
-    db.refresh(user)
+    db.refresh(telegram_user)
+    
     return user
+
+def delete_user_telegram(db: Session, tg_id: int):
+    tg_user = db.query(TelegramUser).filter(TelegramUser.telegram == tg_id).first()
+    db.delete(tg_user)
+    db.commit()
 
 def get_users(db: Session) -> list[User]:
     return db.query(User).all()
