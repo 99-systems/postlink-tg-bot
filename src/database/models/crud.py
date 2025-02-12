@@ -48,3 +48,6 @@ def delete_user_telegram(db: Session, tg_id: int):
 
 def get_users(db: Session) -> list[User]:
     return db.query(User).all()
+
+def is_tg_user_exists(db: Session, tg_id: int) -> bool:
+    return db.query(TelegramUser).filter(TelegramUser.telegram == tg_id).count() > 0

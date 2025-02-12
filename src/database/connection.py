@@ -22,5 +22,6 @@ db = SessionLocal()
 def init_db():
     """Создаёт таблицы, если их нет"""
     from .models.user import User, TelegramUser 
+    from .models.request import SendRequest, DeliveryRequest
     Base.metadata.create_all(bind=engine)
 

@@ -18,24 +18,18 @@ router = Router()
 
 # TODO: Ошибка с хранением данных в состоянии FSM
 
+
+
+@router.message(Command("start"))
+async def start(message: Message, state: FSMContext):
+    await state.set_state(AppState.initial)
+    await message.answer('Приветствую! Выберите пожалуйста ниже что вас интересует', reply_markup=kb.start_reply_mu)
+
 async def after_auth(message: Message, state: FSMContext):
     await state.set_state(AppState.menu)
     await message.answer('Вы успешно авторизовались')
     await message.answer('Что вас интересует?', reply_markup=kb.main_menu_reply_mu)
     await state.set_state(AppState.menu)
-
-
-@router.message(or_f(F.text.lower() == 'выход', Command('exit')))
-async def exit(message: Message, state: FSMContext):
-    try:
-        exit_user = crud.delete_user_telegram(db, tg_id=message.from_user.id)
-    except Exception as e:
-        await message.answer('Ошибка при выходе из системы')
-        print(e)
-        return
-    await message.answer('Вы вышли из аккаунта', reply_markup=kb.start_reply_mu)
-    await state.set_state(AppState.initial)
-
 
 @router.message(AppState.initial, or_f(F.text.lower() == 'логин', Command('login')))
 async def login(message: Message, state: FSMContext):

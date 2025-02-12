@@ -1,8 +1,7 @@
 
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
 
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder 
-
 
 
 start_kb = [[KeyboardButton(text='Регистрация')], [KeyboardButton(text='Логин')]]

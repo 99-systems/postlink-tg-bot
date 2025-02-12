@@ -1,8 +1,11 @@
 from aiogram.fsm.context import FSMContext
 from aiogram import Router, F
-from aiogram.filters import Command
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.filters import Command, or_f
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, CallbackQuery
 
+
+from src.database.models import crud
+from src.database.connection import db
 
 from src.common.states import AppState, SupportState
 from src.handlers.support import support_problems
@@ -19,7 +22,7 @@ async def set_state_menu(message: Message, state: FSMContext):
     await state.set_state(AppState.menu)
     await message.reply('Сейчас можно работать с меню')
 
-    
+
 @router.message(F.text.lower() == 'служба поддержки', AppState.menu)
 async def handle_support(message: Message, state: FSMContext):
     
@@ -40,6 +43,21 @@ async def deliver_parcel(message: Message, state: FSMContext):
     await message.answer('Доставка посылки в разработке')
     
     
+@router.message(or_f(F.text.lower() == 'выход', Command('exit')))
+async def exit(message: Message, state: FSMContext):
+    try:
+        exit_user = crud.delete_user_telegram(db, tg_id=message.from_user.id)
+    except Exception as e:
+        await message.answer('Ошибка при выходе из системы')
+        print(e)
+        return
+    await message.answer('Вы вышли из аккаунта', reply_markup=kb.start_reply_mu)
+    await state.set_state(AppState.initial)
+
+    
 @router.message(AppState.menu)
 async def menu(message: Message, state: FSMContext):
     await message.reply('Что вас интересует?', reply_markup=kb.main_menu_reply_mu)
+
+
+

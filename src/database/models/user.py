@@ -16,6 +16,8 @@ class User(Base):
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     telegram_user = relationship("TelegramUser", back_populates="user", uselist=False)
+    send_requests = relationship("SendRequest", back_populates="user", cascade="all, delete-orphan")
+    delivery_requests = relationship("DeliveryRequest", back_populates="user", cascade="all, delete-orphan")
 
 
 class TelegramUser(Base):
