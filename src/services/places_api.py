@@ -1,4 +1,5 @@
 import httpx
+import json
 
 class PlacesAPI:
     def __init__(self, base_url: str, api_key: str) -> None:
@@ -17,5 +18,12 @@ class PlacesAPI:
                     'X-Goog-FieldMask': '*'
                 }
             )
-            response.raise_for_status()  
-            return response.json()
+            try:
+                response.raise_for_status()
+                return response.json()
+            except httpx.HTTPStatusError as e:
+                return {"error": str(e)}
+            except json.JSONDecodeError as e:
+                return {"error": "Invalid JSON response"}
+            except httpx.HTTPStatusError as e:
+                return {'error': str(e)}
