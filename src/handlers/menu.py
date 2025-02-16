@@ -17,7 +17,7 @@ router = Router()
 
 # TODO: Set AppState.menu after authorization
 # Currently it's set with /menu command
-@router.message(Command('menu'))
+@router.message(or_f(F.text.lower() == 'меню', Command('menu')))
 async def set_state_menu(message: Message, state: FSMContext):
     await state.set_state(AppState.menu)
     await message.reply('Сейчас можно работать с меню')
@@ -58,6 +58,7 @@ async def exit(message: Message, state: FSMContext):
 @router.message(AppState.menu)
 async def menu(message: Message, state: FSMContext):
     await message.reply('Что вас интересует?', reply_markup=kb.main_menu_reply_mu)
+    await state.set_state(AppState.menu)
 
 
 

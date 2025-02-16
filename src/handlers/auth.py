@@ -29,7 +29,6 @@ async def after_auth(message: Message, state: FSMContext):
     await state.set_state(AppState.menu)
     await message.answer('Вы успешно авторизовались')
     await message.answer('Что вас интересует?', reply_markup=kb.main_menu_reply_mu)
-    await state.set_state(AppState.menu)
 
 @router.message(AppState.initial, or_f(F.text.lower() == 'логин', Command('login')))
 async def login(message: Message, state: FSMContext):

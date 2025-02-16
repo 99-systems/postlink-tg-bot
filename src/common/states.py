@@ -20,3 +20,14 @@ class LoginState(StatesGroup):
     phone = State()
     code = State()
     code_confirmation = State()
+
+class SendParcelState(StatesGroup):
+    from_city = State()
+    from_city_confirmation = State()
+    to_city = State()
+    to_city_confirmation = State()
+    parcel_description = State()
+    parcel_weight = State()
+    parcel_price = State()
+    parcel_price_confirmation = State()
+    # parcel_photo = State()

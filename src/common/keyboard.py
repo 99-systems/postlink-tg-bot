@@ -24,3 +24,9 @@ main_menu_kb = [[KeyboardButton(text='Отправить посылку'),
                   [KeyboardButton(text='Служба поддержки')],
                 [KeyboardButton(text='Краткая инструкция'), KeyboardButton(text='Выход')]] 
 main_menu_reply_mu = ReplyKeyboardMarkup(keyboard=main_menu_kb, resize_keyboard=True)
+
+
+def create_curr_city_mu(city: str):
+    inl_builder = InlineKeyboardBuilder()
+    inl_builder.row(InlineKeyboardButton(text=city, callback_data=f'city:current'))
+    return inl_builder.as_markup()
