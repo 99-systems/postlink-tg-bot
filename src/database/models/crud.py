@@ -51,3 +51,6 @@ def get_users(db: Session) -> list[User]:
 
 def is_tg_user_exists(db: Session, tg_id: int) -> bool:
     return db.query(TelegramUser).filter(TelegramUser.telegram == tg_id).count() > 0
+
+def get_city_by_tg_id(db: Session, tg_id: int) -> str:
+    return db.query(User).join(TelegramUser).filter(TelegramUser.telegram == tg_id).first().city
