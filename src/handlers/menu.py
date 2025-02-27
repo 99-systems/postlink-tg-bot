@@ -18,9 +18,10 @@ router = Router()
 # TODO: Set AppState.menu after authorization
 # Currently it's set with /menu command
 @router.message(or_f(F.text.lower() == 'меню', Command('menu')))
-async def set_state_menu(message: Message, state: FSMContext):
+async def menu(message: Message, state: FSMContext):
+    await message.reply('Что вас интересует?', reply_markup=kb.main_menu_reply_mu)
+
     await state.set_state(AppState.menu)
-    await message.reply('Сейчас можно работать с меню')
 
 
 @router.message(F.text.lower() == 'служба поддержки', AppState.menu)
@@ -33,10 +34,6 @@ async def handle_support(message: Message, state: FSMContext):
     
     await message.answer('Опишите проблему', reply_markup=reply_markup)
     
-
-@router.message(F.text.lower() == 'отправить посылку', AppState.menu)
-async def send_parcel(message: Message, state: FSMContext):
-    await message.answer('Отправка посылки в разработке')
     
 @router.message(F.text.lower() == 'доставить посылку', AppState.menu)
 async def deliver_parcel(message: Message, state: FSMContext):
@@ -55,10 +52,6 @@ async def exit(message: Message, state: FSMContext):
     await state.set_state(AppState.initial)
 
     
-@router.message(AppState.menu)
-async def menu(message: Message, state: FSMContext):
-    await message.reply('Что вас интересует?', reply_markup=kb.main_menu_reply_mu)
-    await state.set_state(AppState.menu)
 
 
 
