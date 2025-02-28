@@ -4,6 +4,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 import src.config.env_config as env
 from src.handlers import main as main_handler, auth as auth_handler, support as support_handler, parcel as parcel_handler, menu as menu_handler
 from src.handlers import send_request as send_request_handler
+from src.handlers import deliver as deliver_parcel
 
 from src.middlewares.auth_middleware import AuthMiddlewareMessage
 from src.middlewares.not_auth_middleware import NotAuthMiddlewareMessage
@@ -24,6 +25,7 @@ async def run():
         support_handler.router,
         parcel_handler.router,
         send_request_handler.router,
+        deliver_parcel.router,
     )
     
     main_handler.router.include_router(menu_handler.router)

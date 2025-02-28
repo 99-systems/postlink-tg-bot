@@ -1,7 +1,6 @@
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
 
-from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
-
-from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder 
+from aiogram.utils.keyboard import InlineKeyboardBuilder 
 
 
 start_kb = [[KeyboardButton(text='Регистрация')], [KeyboardButton(text='Логин')]]
@@ -47,4 +46,6 @@ sizes_kb_builder.row(InlineKeyboardButton(text='Большая – до 10 кг,
 sizes_kb_builder.row(InlineKeyboardButton(text='Крупногабаритная – более 10 кг, более 50 см по одной из сторон', callback_data=f'size:extra_large'))
 sizes_kb = sizes_kb_builder.as_markup()
 
-no_desc_kb = InlineKeyboardBuilder().row(InlineKeyboardButton(text='Пропустить', callback_data=f'no_desc')).as_markup()
+no_desc = [[KeyboardButton(text='Пропустить')]]
+no_desc_kb = ReplyKeyboardMarkup(keyboard=no_desc, resize_keyboard=True)
+

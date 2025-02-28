@@ -32,3 +32,13 @@ class SendParcelState(StatesGroup):
     size_confirmation = State()
     description = State()  
     # parcel_photo = State()
+
+class DeliverParcelState(StatesGroup):
+    from_city = State()
+    from_city_confirmation = State()
+    to_city = State()
+    to_city_confirmation = State()
+    date_choose = State()
+    date_confirmation = State()
+    size_choose = State()
+    size_confirmation = State()

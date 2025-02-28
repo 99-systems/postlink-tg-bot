@@ -35,11 +35,6 @@ async def handle_support(message: Message, state: FSMContext):
     await message.answer('Опишите проблему', reply_markup=reply_markup)
     
     
-@router.message(F.text.lower() == 'доставить посылку', AppState.menu)
-async def deliver_parcel(message: Message, state: FSMContext):
-    await message.answer('Доставка посылки в разработке')
-    
-    
 @router.message(or_f(F.text.lower() == 'выход', Command('exit')))
 async def exit(message: Message, state: FSMContext):
     try:
