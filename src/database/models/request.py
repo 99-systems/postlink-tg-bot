@@ -13,10 +13,12 @@ class SendRequest(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     user = relationship("User", back_populates="send_requests")
 
-    date = Column(DateTime, nullable=False)  
-    size = Column(String, nullable=True)
-    weight = Column(String, nullable=True)
+    from_date = Column(DateTime, nullable=False)  
+    to_date = Column(DateTime, nullable=False)
+    size_type = Column(String, nullable=True)
     description = Column(String, nullable=True)
+
+    status = Column(String, nullable=False, default="open")
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
@@ -32,11 +34,11 @@ class DeliveryRequest(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     user = relationship("User", back_populates="delivery_requests")
 
-    from_date = Column(DateTime, nullable=False)  
-    to_date = Column(DateTime, nullable=False)
-    size = Column(String, nullable=True)
-    weight = Column(String, nullable=True)
-    description = Column(String, nullable=True)
+    delivery_date = Column(DateTime, nullable=False) 
+    size_type = Column(String, nullable=True)
+    # description = Column(String, nullable=True)
+
+    status = Column(String, nullable=False, default="open")
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

@@ -24,6 +24,12 @@ main_menu_kb = [[KeyboardButton(text='Отправить посылку'),
                 [KeyboardButton(text='Краткая инструкция'), KeyboardButton(text='Выход')]] 
 main_menu_reply_mu = ReplyKeyboardMarkup(keyboard=main_menu_kb, resize_keyboard=True)
 
+main_menu_open_req_kb = [[KeyboardButton(text='Статус заявки'),
+                  KeyboardButton(text='Отменить заявку')], 
+                  [KeyboardButton(text='Служба поддержки')],
+                [KeyboardButton(text='Краткая инструкция'), KeyboardButton(text='Выход')]] 
+main_menu_open_req_reply_mu = ReplyKeyboardMarkup(keyboard=main_menu_open_req_kb, resize_keyboard=True)
+
 test_b = InlineKeyboardBuilder()
 test_b.row(InlineKeyboardButton(text='Принять', callback_data=f'test'),InlineKeyboardButton(text='Отклонить', callback_data=f'test'))
 test_mk = test_b.as_markup()
@@ -52,3 +58,15 @@ sizes_kb_del = sizes_kb_builder.as_markup()
 no_desc = [[KeyboardButton(text='Пропустить')]]
 no_desc_kb = ReplyKeyboardMarkup(keyboard=no_desc, resize_keyboard=True)
 
+def create_send_req_buttons(send_req_id: int):
+    inl_builder = InlineKeyboardBuilder()
+    inl_builder.row(InlineKeyboardButton(text='Принять✅', callback_data=f'send_req_1:{send_req_id}'),
+                    InlineKeyboardButton(text='Отклонить❌', callback_data=f'send_req_0:{send_req_id}')
+                    )
+    return inl_builder.as_markup()
+
+
+def create_close_req_button(req_type: str, req_id: int):
+    inl_builder = InlineKeyboardBuilder()
+    inl_builder.row(InlineKeyboardButton(text='Закрыть заявку', callback_data=f'close_req:{req_type}:{req_id}'))
+    return inl_builder.as_markup()

@@ -11,6 +11,7 @@ from src.common.states import AppState, SupportState
 from src.handlers.support import support_problems
 from src.common import keyboard as kb
 
+
 router = Router()
 
 
@@ -19,8 +20,17 @@ router = Router()
 # Currently it's set with /menu command
 @router.message(or_f(F.text.lower() == 'меню', Command('menu')))
 async def menu(message: Message, state: FSMContext):
-    await message.reply('Что вас интересует?', reply_markup=kb.main_menu_reply_mu)
+    if crud.is_open_request_by_tg_id(db, message.from_user.id):
+        await message.reply('Что вас интересует?', reply_markup=kb.main_menu_open_req_reply_mu)
+    else:
+        await message.reply('Что вас интересует?', reply_markup=kb.main_menu_reply_mu)
 
+    await state.set_state(AppState.menu)
+
+
+@router.message(F.text.lower() == 'краткая инструкция', AppState.menu)
+async def instruction(message: Message, state: FSMContext):
+    await message.answer('Тут будет Инструкция', reply_markup=kb.main_menu_reply_mu)
     await state.set_state(AppState.menu)
 
 
@@ -47,6 +57,5 @@ async def exit(message: Message, state: FSMContext):
     await state.set_state(AppState.initial)
 
     
-
 
 

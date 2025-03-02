@@ -13,6 +13,7 @@ from src.common import keyboard as kb
 from src.database.models import crud
 
 from src.database.connection import db
+from src.handlers.menu import menu
 
 router = Router()
 
@@ -28,7 +29,7 @@ async def start(message: Message, state: FSMContext):
 async def after_auth(message: Message, state: FSMContext):
     await state.set_state(AppState.menu)
     await message.answer('Вы успешно авторизовались')
-    await message.answer('Что вас интересует?', reply_markup=kb.main_menu_reply_mu)
+    await menu(message, state)
 
 @router.message(AppState.initial, or_f(F.text.lower() == 'логин', Command('login')))
 async def login(message: Message, state: FSMContext):
@@ -127,7 +128,7 @@ async def handle_phone(message: Message, state: FSMContext):
     await state.update_data(phone =  message.contact.phone_number)
     
     data = await state.get_data()
-    await message.reply(data['name'] + ' ' + data['city'] + ' ' + data['phone'])
+    # await message.reply(data['name'] + ' ' + data['city'] + ' ' + data['phone'])
     
 
     if crud.is_user_phone_exists(db, data['phone']):
@@ -148,7 +149,4 @@ async def handle_phone(message: Message, state: FSMContext):
         return
     
     await state.set_state({})
-
-    await message.reply(f'Пользователь {user.name} успешно добавлен')
-
     await after_auth(message, state)
