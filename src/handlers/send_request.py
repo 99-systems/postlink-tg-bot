@@ -159,7 +159,7 @@ async def show_request_details(message: Message, state: FSMContext):
     print(send_req)
 
 
-    await message.answer(f'Статус вашей заявки: Открыта.\nНомер заявки: {send_req.id}. В ближайшее время мы свяжем вас с курьером.\n{details_message}', reply_markup=kb.main_menu_reply_mu)
+    await message.answer(f'Статус вашей заявки: Открыта.\nНомер заявки: {send_req.id}. В ближайшее время мы свяжем вас с курьером.\n{details_message}', reply_markup=kb.main_menu_open_req_reply_mu)
     await state.set_state(AppState.menu)
 
     await matcher.match_send_request(send_req)
