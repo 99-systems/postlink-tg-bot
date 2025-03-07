@@ -24,7 +24,30 @@ router = Router()
 @router.message(Command("start"))
 async def start(message: Message, state: FSMContext):
     await state.set_state(AppState.initial)
-    await message.answer('Приветствую! Выберите пожалуйста ниже что вас интересует', reply_markup=kb.start_reply_mu)
+    await message.answer('''
+📦 Добро пожаловать в [Postlink]! 📦
+Этот бот помогает отправителям находить доставщиков, а доставщикам — зарабатывать на перевозке посылок.
+
+🔹 Как это работает?
+ 
+1️⃣ Отправитель создаёт заявку с описанием посылки и маршрутом. 
+
+2️⃣ Доставщик выбирает подходящий рейс и договаривается о передаче. 
+
+3️⃣ После доставки отправитель подтверждает получение, и сделка завершается.
+
+
+⚠ Важно!
+
+-Запрещена передача нелегальных товаров.
+
+-Участники сами договариваются об оплате.
+                         
+-Бот не несёт ответственности за посылки и споры между пользователями.
+
+
+🚀 Готовы начать? Нажмите "start" и создайте свою первую заявку!
+''', reply_markup=kb.start_reply_mu)
 
 async def after_auth(message: Message, state: FSMContext):
     await state.set_state(AppState.menu)
@@ -39,6 +62,10 @@ async def login(message: Message, state: FSMContext):
     
 @router.message(LoginState.phone)
 async def handle_phone(message: Message, state: FSMContext):
+    if message.contact.phone_number[0] != '+':
+        message.contact.phone_number = '+' + message.contact.phone_number
+
+
     await state.update_data(phone =  message.contact.phone_number)
     data = await state.get_data()  
     user = crud.get_user_by_phone(db, data['phone'])
@@ -123,6 +150,9 @@ async def handle_city_confirmation(message: Message, state: FSMContext):
     
 @router.message(RegistrationState.phone)
 async def handle_phone(message: Message, state: FSMContext):
+    if message.contact.phone_number[0] != '+':
+        message.contact.phone_number = '+' + message.contact.phone_number
+
     await message.reply('Сообщите 3-х значный код отправленный вам на WhatsApp' + message.contact.phone_number, reply_markup=ReplyKeyboardRemove())
     
     await state.update_data(phone =  message.contact.phone_number)

@@ -153,7 +153,7 @@ async def show_request_details(message: Message, state: FSMContext, user = None)
     delivery_req = crud.create_delivery_request(db, user.id, from_city, to_city, deliver_date, size_choose)
     print(vars(delivery_req))
 
-    await message.answer(f'Статус вашей заявки: Открыта.\nНомер заявки: {delivery_req.id}. В ближайшее время мы свяжем вас с отправителем.\n{details_message}', reply_markup=kb.main_menu_reply_mu)
+    await message.answer(f'Статус вашей заявки: Открыта.\nНомер заявки: {delivery_req.id}. В ближайшее время мы свяжем вас с отправителем.\n{details_message}', reply_markup=kb.main_menu_open_req_reply_mu)
     await state.set_state(AppState.menu)
 
     await matcher.match_delivery_request(delivery_req)
