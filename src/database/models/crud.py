@@ -163,3 +163,14 @@ def close_delivery_request(db: Session, req_id: int):
     req = db.query(DeliveryRequest).filter(DeliveryRequest.id == req_id).first()
     req.status = 'closed'
     db.commit()
+
+def get_all_requests(db: Session):
+    requests = db.query(SendRequest).all()
+    requests += db.query(DeliveryRequest).all()
+    return requests
+
+def get_all_send_requests(db: Session):
+    return db.query(SendRequest).all()
+
+def get_all_delivery_requests(db: Session):
+    return db.query(DeliveryRequest).all()
