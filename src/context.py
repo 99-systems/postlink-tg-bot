@@ -1,5 +1,5 @@
-from src.services.places_api import PlacesAPI
-import src.config.env_config as env
+from src.services import PlacesAPI, OTPService
+from src.config import config
 
-
-places_api = PlacesAPI(env.places_base_url, env.places_api_key)
+places_api = PlacesAPI(config.PLACES_BASE_URL, config.PLACES_API_KEY)
+otp_service = OTPService(config.OTP_SERVICE_URL, config.OTP_API_KEY)
