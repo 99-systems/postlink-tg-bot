@@ -10,8 +10,7 @@ if config.DEBUG == "true":
     logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
 
 
-engine = create_engine(config.DATABASE_URL.replace('postgres://', 'postgresql+pyscopg2://'), echo=True)
-
+engine = create_engine(config.DATABASE_URL.replace('postgres://', 'postgresql+psycopg2://'), echo=True)
 Base = declarative_base()
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
