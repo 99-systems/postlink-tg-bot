@@ -61,4 +61,4 @@ async def close_request_kb(callback: CallbackQuery, state: FSMContext):
         return
     
     req_type_text = 'отправку' if req_type == 'send' else 'доставку'
-    await callback.message.answer(f'Заявка на {req_type_text} по номеру {req_id} закрыта.')
+    await callback.message.answer(f'Заявка на {req_type_text} по номеру {req_id} закрыта.', reply_markup=kb.main_menu_reply_mu)
