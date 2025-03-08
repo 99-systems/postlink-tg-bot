@@ -5,6 +5,13 @@ from aiogram.types import Message, ReplyKeyboardRemove
 
 from src.common.states import SupportState
 
+from src.database.models import crud
+from src.database.connection import db
+from src.handlers import menu
+from src.config.env_config import config
+
+from src.services import supp_request_sender as supp_serv
+
 router = Router()
 
 
@@ -51,10 +58,16 @@ async def handle_other_problem(message: Message, state: FSMContext):
     
 @router.message(SupportState.initial, KnownProblemFilter())
 async def handle_known_problem(message: Message, state: FSMContext):
-    await message.answer('В ближайшее время мы свяжемся с Вами для уточнения деталей. Просим ожидать звонка. Ваш номер заказа: ###', reply_markup=ReplyKeyboardRemove())
-    await state.clear()
+    req = crud.create_supp_request(db, message.from_user.id, message.text)
+    await supp_serv.send_supp_request(req)
+    await message.answer(f'В ближайшее время мы свяжемся с Вами для уточнения деталей. Просим ожидать звонка. Ваш номер заявки: {req.id}', reply_markup=ReplyKeyboardRemove())
+    await menu.menu(message, state)
 
 @router.message(SupportState.unknown_problem_description)
 async def handle_other_problem_description(message: Message, state: FSMContext):
-    await message.answer('В ближайшее время мы свяжемся с Вами для уточнения деталей. Просим ожидать звонка. Ваш номер заказа: ###', reply_markup=ReplyKeyboardRemove())
-    await state.clear()
+    req = crud.create_supp_request(db, message.from_user.id, message.text)
+    await supp_serv.send_supp_request(req)
+    await message.answer(f'В ближайшее время мы свяжемся с Вами для уточнения деталей. Просим ожидать звонка. Ваш номер заказа: {req.id}', reply_markup=ReplyKeyboardRemove())
+    await menu.menu(message, state)
+
+    

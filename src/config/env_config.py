@@ -12,6 +12,7 @@ class Config:
     OTP_API_KEY = os.getenv("OTP_SERVICE_API_KEY")
     OTP_SERVICE_URL = os.getenv("OTP_SERVICE_URL")
     DEBUG = os.getenv('DEBUG')
+    SUPPORT_CHAT_ID = os.getenv('SUPPORT_CHANNEL_CHAT_ID')
 
 config = Config()
 

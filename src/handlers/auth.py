@@ -118,6 +118,13 @@ async def handle_otp_code(message: Message, state: FSMContext):
     # Проверка успешной верификации OTP
     if response.get('message') == 'OTP verified successfully':
         await state.clear()  # Правильный способ очистки состояния
+        try: 
+            user = crud.get_user_by_phone(db, phone)
+            create_tg_user = crud.add_user_telegram(db, tg_id=message.from_user.id, username=message.from_user.username, user_id=user.id)
+        except Exception as e:
+            await message.reply('Ошибка при авторизации пользователя')
+            await back_to_start(message, state)
+            return
         await after_auth(message, state)
     else:
         await message.reply('Ошибка при обработке OTP. Попробуйте позже.')
