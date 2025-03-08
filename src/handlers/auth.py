@@ -66,24 +66,24 @@ async def handle_phone(message: Message, state: FSMContext):
         await message.reply('Можно узнать Ваш сотовый номер телефона?', reply_markup=kb.phone_reply_mu)
         return
     
-    if message.contact.phone_number[0] != '+':
-        message.contact.phone_number = '+' + message.contact.phone_number
-
-
-    await state.update_data(phone =  message.contact.phone_number)
-    data = await state.get_data()  
-    user = crud.get_user_by_phone(db, data['phone'])
+    user_phone = message.contact.phone_number
+    
+    if not user_phone.startswith('+'):
+        user_phone = '+' + user_phone
+    
+    await state.update_data(phone=user_phone)
+    
+    user = crud.get_user_by_phone(db, user_phone)
     if not user:
         await message.reply('Пользователя с таким номером телефона не найден, попробуйте зарегистрироваться')
         await state.set_state({}) 
         await back_to_start(message, state)
         return
     
-    
-    response = await context.otp_service.send_otp(message.contact.phone_number)
+    response = await context.otp_service.send_otp(user_phone)
     if 'message' in response:
-        await message.reply('Сообщите 6 значный код отправленный вам на WhatsApp' + message.contact.phone_number, reply_markup=ReplyKeyboardRemove())
-        await state.update_data(phone=message.contact.phone_number)
+        await message.reply('Сообщите 6 значный код отправленный вам на WhatsApp: ' + user_phone, reply_markup=ReplyKeyboardRemove())
+        await state.update_data(phone=user_phone)
         await state.set_state(LoginState.otp_code)
     else:
         await message.reply('Попробуйте еще раз')
@@ -188,26 +188,29 @@ async def handle_city_confirmation(message: Message, state: FSMContext):
     
 @router.message(RegistrationState.phone)
 async def handle_phone(message: Message, state: FSMContext):
-    if message.contact.phone_number[0] != '+':
-        message.contact.phone_number = '+' + message.contact.phone_number
     
     if not message.contact:
         await message.reply('Можно узнать Ваш сотовый номер телефона?', reply_markup=kb.phone_reply_mu)
         return
     
-    await state.update_data(phone=message.contact.phone_number)
+    user_phone = message.contact.phone_number
+    
+    if not user_phone.startswith('+'):
+        user_phone = '+' + user_phone
+    
+    await state.update_data(phone=user_phone)
         
-    if crud.is_user_phone_exists(db, message.contact.phone_number):
+    if crud.is_user_phone_exists(db, user_phone):
         await message.reply('Пользователь с таким номером телефона уже существует, попробуйте войти')
         await state.set_state({})
         await back_to_start(message, state)
         return
     
     # Sending OTP
-    response = await context.otp_service.send_otp(message.contact.phone_number)
+    response = await context.otp_service.send_otp(user_phone)
     if 'message' in response:
-        await message.reply('Сообщите 6 значный код отправленный вам на WhatsApp' + message.contact.phone_number, reply_markup=ReplyKeyboardRemove())
-        await state.update_data(phone=message.contact.phone_number)
+        await message.reply('Сообщите 6 значный код отправленный вам на WhatsApp: ' + user_phone, reply_markup=ReplyKeyboardRemove())
+        await state.update_data(phone=user_phone)
         await state.set_state(RegistrationState.otp_code)
     else:
         await message.reply('Попробуйте еще раз')
