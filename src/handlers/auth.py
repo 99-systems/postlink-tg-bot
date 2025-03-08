@@ -98,35 +98,30 @@ async def handle_invalid_otp_code(message: Message, state: FSMContext):
 @router.message(LoginState.otp_code, F.text.len() == 6, F.text.func(str.isdigit))
 async def handle_otp_code(message: Message, state: FSMContext):
     data = await state.get_data()
-    phone = data['phone']
+    phone = data.get('phone')
+
     response = await context.otp_service.verify_otp(phone, message.text)
-    print(response)
+
+    # Словарь для обработки ошибок
+    error_messages = {
+        'OTP has expired. Please request a new one.': (LoginState.phone, 'Код устарел, запросите новый код'),
+        'OTP has already been used.': (LoginState.phone, 'Код уже использован, запросите новый код'),
+        'Invalid OTP or phone number.': (LoginState.otp_code, 'Неверный код. Попробуйте еще раз'),
+    }
 
     if 'detail' in response:
-        if response['detail'] == 'OTP has expired. Please request a new one.':
-            await message.reply('Код устарел, запросите новый код')
-            await state.set_state(LoginState.phone)
-            return
-        
-        elif response['detail'] == 'OTP has already been used.':
-            await message.reply('Код уже использован, запросите новый код')
-            await state.set_state(LoginState.phone)
-            return
-        
-        elif response['detail'] == 'Invalid OTP or phone number.':
-            await message.reply('Неверный код. Попробуйте еще раз')
-            await state.set_state(LoginState.otp_code)
-            return
-        
-        else:
-            await message.reply('Ошибка при верификации кода')
-            await state.set_state(LoginState.phone)
-            return
-        
-    elif 'message' in response:
-        if response['message'] == 'OTP verified successfully':
-            await state.set_state({})
-            await after_auth(message, state)
+        state_target, error_msg = error_messages.get(response['detail'], (LoginState.phone, 'Ошибка при верификации кода'))
+        await message.reply(error_msg)
+        await state.set_state(state_target)
+        return
+
+    # Проверка успешной верификации OTP
+    if response.get('message') == 'OTP verified successfully':
+        await state.clear()  # Правильный способ очистки состояния
+        await after_auth(message, state)
+    else:
+        await message.reply('Ошибка при обработке OTP. Попробуйте позже.')
+
 
 @router.message(AppState.initial, or_f(F.text.lower() == 'регистрация', Command('register')))   
 async def registration(message: Message, state: FSMContext):
@@ -225,43 +220,36 @@ async def handle_invalid_otp_code(message: Message, state: FSMContext):
 @router.message(RegistrationState.otp_code, F.text.len() == 6, F.text.func(str.isdigit))
 async def handle_otp_code(message: Message, state: FSMContext):
     data = await state.get_data()
-    phone = data['phone']
+    phone = data.get('phone')
+    
     response = await context.otp_service.verify_otp(phone, message.text)
-    print(response)
+
+    # Обработка ошибок верификации OTP
+    error_messages = {
+        'OTP has expired. Please request a new one.': (RegistrationState.phone, 'Код устарел, запросите новый код'),
+        'OTP has already been used.': (RegistrationState.phone, 'Код уже использован, запросите новый код'),
+        'Invalid OTP or phone number.': (RegistrationState.otp_code, 'Неверный код. Попробуйте еще раз')
+    }
 
     if 'detail' in response:
-        if response['detail'] == 'OTP has expired. Please request a new one.':
-            await message.reply('Код устарел, запросите новый код')
-            await state.set_state(RegistrationState.phone)
-            return
-        
-        elif response['detail'] == 'OTP has already been used.':
-            await message.reply('Код уже использован, запросите новый код')
-            await state.set_state(RegistrationState.phone)
-            return
-        
-        elif response['detail'] == 'Invalid OTP or phone number.':
-            await message.reply('Неверный код. Попробуйте еще раз')
-            await state.set_state(RegistrationState.otp_code)
-            return
-        
-        else:
-            await message.reply('Ошибка при верификации кода')
-            await state.set_state(RegistrationState.phone)
-            return
-        
-    elif 'message' in response:
-        if response['message'] == 'OTP verified successfully':
-            try:
-                crud.create_user(
-                    db, tg_id=message.from_user.id, username=message.from_user.username,
-                    name=data['name'], phone=data['phone'], city=data['city']
-                    )
-            except Exception as e:
-                await message.reply('Ошибка при регистрации пользователя')
-                print(e)
-                await back_to_start(message, state)
-                return
+        state_target, error_msg = error_messages.get(response['detail'], (RegistrationState.phone, 'Ошибка при верификации кода'))
+        await message.reply(error_msg)
+        await state.set_state(state_target)
+        return
 
-        await state.set_state({})
+    # Если OTP успешно подтвержден
+    if response.get('message') == 'OTP verified successfully':
+        try:
+            crud.create_user(
+                db, tg_id=message.from_user.id, username=message.from_user.username,
+                name=data['name'], phone=data['phone'], city=data['city']
+            )
+        except Exception as e:
+            await message.reply('Ошибка при регистрации пользователя')
+            await back_to_start(message, state)
+            return
+
+        await state.clear()
         await after_auth(message, state)
+    else:
+        await message.reply('Ошибка при обработке OTP. Попробуйте позже.')
