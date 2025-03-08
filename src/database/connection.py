@@ -22,5 +22,6 @@ def init_db():
     """Создаёт таблицы, если их нет"""
     from .models.user import User, TelegramUser 
     from .models.request import SendRequest, DeliveryRequest
+    from .models.support_req import SupportRequest
     Base.metadata.create_all(bind=engine)
 

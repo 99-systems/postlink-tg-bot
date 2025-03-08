@@ -18,6 +18,7 @@ class User(Base):
     telegram_user = relationship("TelegramUser", back_populates="user", uselist=False)
     send_requests = relationship("SendRequest", back_populates="user", cascade="all, delete-orphan")
     delivery_requests = relationship("DeliveryRequest", back_populates="user", cascade="all, delete-orphan")
+    support_requests = relationship("SupportRequest", back_populates="user", cascade="all, delete-orphan")
 
 
 class TelegramUser(Base):
