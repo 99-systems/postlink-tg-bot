@@ -12,19 +12,12 @@ def create_user(db: Session, tg_id: int, name: str, phone: str, city: str, code:
         phone=phone,
         city=city,
         code=code,
-        
+        telegram_user=TelegramUser(telegram=tg_id, username=username)
     )
+    
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-
-    new_tg_user = TelegramUser(
-        telegram=tg_id,
-        user_id=new_user.id,
-        username=username
-    )
-    db.add(new_tg_user)
-    db.commit()
 
     return new_user
 
@@ -118,8 +111,11 @@ def get_matched_requests_for_delivery(db: Session, delivery_req: DeliveryRequest
         SendRequest.status == 'open'
     ).all()
 
-def get_request_status_by_tg_id(db: Session, tg_id: int) -> str:
+def get_request_status_by_tg_id(db: Session, tg_id: int) -> Optional[str]:
     user = get_user_by_tg_id(db, tg_id)
+    if not user:
+        return None
+
     send_req = db.query(SendRequest).filter(SendRequest.user_id == user.id, SendRequest.status == 'open').first()
     delivery_req = db.query(DeliveryRequest).filter(DeliveryRequest.user_id == user.id, DeliveryRequest.status == 'open').first()
 
@@ -128,7 +124,8 @@ def get_request_status_by_tg_id(db: Session, tg_id: int) -> str:
     elif delivery_req:
         return 'delivery'
     else:
-        return False
+        return None
+
     
 
 def is_open_request_by_tg_id(db: Session, tg_id: int) -> bool:
