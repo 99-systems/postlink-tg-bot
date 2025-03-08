@@ -15,11 +15,11 @@ class RegistrationState(StatesGroup):
     city = State()
     city_confirmation = State()
     phone = State()
+    otp_code = State()
 
 class LoginState(StatesGroup):
     phone = State()
-    code = State()
-    code_confirmation = State()
+    otp_code = State()
 
 class SendParcelState(StatesGroup):
     from_city = State()
