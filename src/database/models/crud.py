@@ -185,3 +185,14 @@ def get_all_req_ids_by_user(db: Session, user: User) -> List[int]:
     delivery_req_ids = [req.id for req in user.delivery_requests]
 
     return {'send': send_req_ids, 'delivery': delivery_req_ids}
+
+def get_all_requests(db: Session):
+    requests = db.query(SendRequest).all()
+    requests += db.query(DeliveryRequest).all()
+    return requests
+
+def get_all_send_requests(db: Session):
+    return db.query(SendRequest).all()
+
+def get_all_delivery_requests(db: Session):
+    return db.query(DeliveryRequest).all()
