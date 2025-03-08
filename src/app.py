@@ -4,6 +4,7 @@ from src.handlers import main as main_handler, auth as auth_handler, support as 
 from src.handlers import send_request as send_request_handler
 from src.handlers import deliver_request as deliver_request_handler
 from src.handlers import manage_request as manage_request_handler
+from src.handlers import admin as admin_handler
 
 from src.handlers import main as main_handler, auth as auth_handler, support as support_handler, menu as menu_handler
 from src.middlewares.auth_middleware import AuthMiddlewareMessage
@@ -25,7 +26,8 @@ async def run():
         support_handler.router,
         send_request_handler.router,
         deliver_request_handler.router,
-        manage_request_handler.router
+        manage_request_handler.router,
+        admin_handler.router
     )
     
     main_handler.router.include_router(menu_handler.router)

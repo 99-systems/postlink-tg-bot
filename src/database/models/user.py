@@ -18,7 +18,8 @@ class User(Base):
     telegram_user = relationship("TelegramUser", back_populates="user", uselist=False)
     send_requests = relationship("SendRequest", back_populates="user", cascade="all, delete-orphan")
     delivery_requests = relationship("DeliveryRequest", back_populates="user", cascade="all, delete-orphan")
-
+    support_requests = relationship("SupportRequest", back_populates="user", cascade="all, delete-orphan")
+    access_user = relationship("AccessUser", back_populates="user", cascade="all, delete-orphan")
 
 class TelegramUser(Base):
     __tablename__ = "telegram_users" 
@@ -30,3 +31,12 @@ class TelegramUser(Base):
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="telegram_user", uselist=False)
+
+class AccessUser(Base):
+    __tablename__ = "access_users"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    role = Column(String, nullable=False, index=True)
+
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    user = relationship("User", back_populates="access_user", uselist=False)

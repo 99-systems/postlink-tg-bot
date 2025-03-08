@@ -1,4 +1,6 @@
 from sqlalchemy.orm import Session
+
+from src.database.models.support_req import SupportRequest
 from .user import TelegramUser, User
 from .request import SendRequest, DeliveryRequest
 from typing import List, Optional
@@ -160,3 +162,37 @@ def close_delivery_request(db: Session, req_id: int):
     req = db.query(DeliveryRequest).filter(DeliveryRequest.id == req_id).first()
     req.status = 'closed'
     db.commit()
+
+
+def create_supp_request(db: Session, tg_id: int, message: str, req_type = None, req_id = None) -> SupportRequest:
+    user = get_user_by_tg_id(db, tg_id)
+    new_request = SupportRequest(
+        user_id=user.id,
+        req_type=req_type,
+        req_id=req_id,
+        message=message
+    )
+    db.add(new_request)
+    db.commit()
+    db.refresh(new_request)
+    return new_request
+
+def get_user_from_supp_req(db: Session, supp_req: SupportRequest) -> User:
+    return supp_req.user
+
+def get_all_req_ids_by_user(db: Session, user: User) -> List[int]:
+    send_req_ids = [req.id for req in user.send_requests]
+    delivery_req_ids = [req.id for req in user.delivery_requests]
+
+    return {'send': send_req_ids, 'delivery': delivery_req_ids}
+
+def get_all_requests(db: Session):
+    requests = db.query(SendRequest).all()
+    requests += db.query(DeliveryRequest).all()
+    return requests
+
+def get_all_send_requests(db: Session):
+    return db.query(SendRequest).all()
+
+def get_all_delivery_requests(db: Session):
+    return db.query(DeliveryRequest).all()
