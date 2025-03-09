@@ -7,8 +7,6 @@ from src.database.connection import db
 from src.bot import bot
 import src.common.keyboard as kb 
 
-import asyncio
-
 async def match_send_request(send_req: SendRequest):
     delivery_reqs = crud.get_matched_requests_for_send(db, send_req)
     for delivery_req in delivery_reqs:
