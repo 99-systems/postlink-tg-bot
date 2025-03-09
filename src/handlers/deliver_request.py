@@ -1,23 +1,22 @@
+from datetime import datetime
+
 from aiogram.fsm.context import FSMContext
 from aiogram import Router, F
 from aiogram.filters import Command, or_f
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 
-import src.context as context
-
-
+import src.services.matcher as matcher
 from src.common.states import AppState, DeliverParcelState
 from src.common import keyboard as kb
-
 from src.database.models import crud
-
 from src.database.connection import db
+from src.utils import get_place
+
+from .menu import menu
+
 
 router = Router()
 
-from datetime import datetime
-
-import src.services.matcher as matcher
 
 def is_valid_date_range(deliver_date: str) -> bool:
     try:
@@ -35,8 +34,12 @@ async def from_city_choose(message: Message, state: FSMContext):
     await state.set_state(DeliverParcelState.from_city)
     curr_city = crud.get_city_by_tg_id(db, message.from_user.id)
 
-    await message.answer('Давайте создадим заявку, и если появится подходящая посылка, мы вам сообщим!', reply_markup=ReplyKeyboardRemove())
+    await message.answer('Давайте создадим заявку, и если появится подходящая посылка, мы вам сообщим!', reply_markup=kb.request_location_and_back_reply_mu)
     await message.answer('Откуда начинается ваш маршрут?', reply_markup=kb.create_from_curr_city_mu(curr_city))
+    
+@router.message(DeliverParcelState.from_city, F.text.lower() == 'назад')
+async def back_to_menu(message: Message, state: FSMContext):
+    await menu(message, state)
 
 
 @router.callback_query(DeliverParcelState.from_city, F.data == 'from_city:current')
@@ -49,12 +52,11 @@ async def from_city_kb(callback: CallbackQuery, state: FSMContext):
 
 @router.message(DeliverParcelState.from_city)
 async def from_city(message: Message, state: FSMContext):
-    service_response = await context.places_api.search_text(message.text)
-    place = service_response.get('places', [None])[0]
+    place = await get_place(message.text, message)
     if place:
-        await state.update_data(from_city=place["formattedAddress"])
+        await state.update_data(from_city=place["display_name"])
         await state.set_state(DeliverParcelState.from_city_confirmation)
-        await message.answer(f'Отправляете посылку отсюда?: {place["formattedAddress"]}?', reply_markup=kb.city_conf_reply_mu)
+        await message.answer(f'Отправляете посылку отсюда?: {place["display_name"]}?', reply_markup=kb.city_conf_reply_mu)
     else:
         await message.answer('Город не найден. Попробуйте еще раз')
 
@@ -63,6 +65,7 @@ async def from_city(message: Message, state: FSMContext):
 async def from_city_retry(message: Message, state: FSMContext):
     await state.set_state(DeliverParcelState.from_city)
     curr_city = crud.get_city_by_tg_id(db, message.from_user.id)
+    await message.answer('Давайте попробуем еще раз.', reply_markup=kb.request_location_and_back_reply_mu)
     await message.answer('Откуда начинается ваш маршрут?', reply_markup=kb.create_from_curr_city_mu(curr_city))
 
     
@@ -72,19 +75,18 @@ async def deliver_parcel(message: Message, state: FSMContext, user = None):
     if user is None:
         user = message.from_user
     await state.set_state(DeliverParcelState.to_city)
-    await message.answer('Куда вы отправляетесь?', reply_markup=ReplyKeyboardRemove())
+    await message.answer('Куда вы отправляетесь?', reply_markup=kb.request_location_and_back_reply_mu)
 
 
 @router.message(DeliverParcelState.to_city)
 async def to_city(message: Message, state: FSMContext):
-    service_response = await context.places_api.search_text(message.text)
-    place = None
-    if 'places' in service_response:
-        place = service_response['places'][0]
+    
+    place = await get_place(message.text, message)
+
     if place:
         await state.set_state(DeliverParcelState.to_city_confirmation)
-        await message.answer(f'Отправляетесь сюда?: {place["formattedAddress"]}?', reply_markup=kb.city_conf_reply_mu)
-        await state.update_data(to_city=place["formattedAddress"])
+        await message.answer(f'Отправляетесь сюда?: {place["display_name"]}?', reply_markup=kb.city_conf_reply_mu)
+        await state.update_data(to_city=place["display_name"])
     else:
         data = await state.get_data()
         await state.update_data(try_count=data.get('try_count', 0) + 1)
@@ -93,7 +95,7 @@ async def to_city(message: Message, state: FSMContext):
 @router.message(DeliverParcelState.to_city_confirmation, F.text.lower() == 'да')
 async def date_choose(message: Message, state: FSMContext):
     await state.set_state(DeliverParcelState.date_choose)
-    await message.answer('Какого числа вы отправляетесь в пункт назначения. Напишите дату в формате: 10.02.2025')
+    await message.answer('Какого числа вы отправляетесь в пункт назначения. Напишите дату в формате: 10.02.2025', reply_markup=ReplyKeyboardRemove())
 
 
 @router.message(DeliverParcelState.date_choose)

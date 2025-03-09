@@ -61,6 +61,10 @@ async def handle_known_problem(message: Message, state: FSMContext):
     await supp_serv.send_supp_request(req)
     await message.answer(f'В ближайшее время мы свяжемся с Вами для уточнения деталей. Просим ожидать звонка. Ваш номер заявки: {req.id}', reply_markup=ReplyKeyboardRemove())
     await menu.menu(message, state)
+    
+@router.message(SupportState.initial, F.text.lower() == 'назад')
+async def back_to_menu(message: Message, state: FSMContext):
+    await menu.menu(message, state)
 
 @router.message(SupportState.unknown_problem_description)
 async def handle_other_problem_description(message: Message, state: FSMContext):

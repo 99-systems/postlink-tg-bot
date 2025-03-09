@@ -3,13 +3,11 @@ from aiogram import Router, F
 from aiogram.filters import Command, or_f, StateFilter
 from aiogram.types import Message, ReplyKeyboardRemove
 
-from src.common.states import RegistrationState
 import src.context as context
-
-
+from src.common.states import RegistrationState
+from src.utils import get_place
 from src.common.states import AppState, RegistrationState, LoginState
 from src.common import keyboard as kb
-
 from src.database.models import crud
 from src.database.connection import db
 from src.handlers.menu import menu
@@ -130,13 +128,13 @@ async def handle_otp_code(message: Message, state: FSMContext):
         await message.reply('Ошибка при обработке OTP. Попробуйте позже.')
 
 
-@router.message(RegistrationState.city, F.text == 'Назад')
+@router.message(RegistrationState.city, F.text.lower() == 'назад')
 @router.message(AppState.initial, or_f(F.text.lower() == 'регистрация', Command('register')))   
 async def registration(message: Message, state: FSMContext):
     await state.set_state(RegistrationState.name)
     await message.reply('Как Вас зовут?', reply_markup=kb.auth_back_reply_mu)
 
-@router.message(StateFilter(RegistrationState.name), F.text == 'Назад')
+@router.message(StateFilter(RegistrationState.name), F.text.lower() == 'назад')
 async def back_to_start(message: Message, state: FSMContext):
     await state.set_state({})
     await state.set_state(AppState.initial)
@@ -165,31 +163,12 @@ async def handle_name(message: Message, state: FSMContext):
 
     if 'try_count' in state_data and state_data['try_count'] > 0:
         text = f'{name}, В каком городе Вы находитесь?\n\n<i>Если не можете найти, можно указать страну с городом.\nКазахстан, Алматы</i>'
-    await message.answer(text, reply_markup=kb.city_handler_reply_mu, parse_mode='HTML')
+    await message.answer(text, reply_markup=kb.request_location_and_back_reply_mu, parse_mode='HTML')
     
 @router.message(RegistrationState.city)
 async def handle_city(message: Message, state: FSMContext):
     
-    place = None
-    query = message.text
-
-    if message.location:
-        service_response = await context.nominatim_service.reverse(message.location.latitude, message.location.longitude)
-        address = service_response.get('address', {})
-        place_type = address.get('city') or address.get('town')
-        query = f"{place_type}, {address.get('state', '')}, {address.get('country', '')}"
-
-    service_response = await context.nominatim_service.search(query)
-    
-    if service_response:
-        place = next((response_place for response_place in service_response 
-                    if response_place['category'] == 'place' and 
-                        response_place['type'] in ['village', 'town', 'city']), None)
-        
-        if not place:
-            place = next((response_place for response_place in service_response 
-                    if response_place['category'] == 'boundary' and 
-                        response_place['type'] == 'administrative'), None)
+    place = await get_place(message.text, message)
     
     if place:
         await state.set_state(RegistrationState.city_confirmation)
@@ -198,7 +177,7 @@ async def handle_city(message: Message, state: FSMContext):
     else:
         data = await state.get_data()
         await state.update_data(try_count=data.get('try_count', 0) + 1)
-        await message.answer('Город не найден. Попробуйте еще раз', reply_markup=kb.city_handler_reply_mu)
+        await message.answer('Город не найден. Попробуйте еще раз', reply_markup=kb.request_location_and_back_reply_mu)
 
     
 @router.message(RegistrationState.city_confirmation, F.text.lower() == 'да')
