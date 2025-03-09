@@ -8,9 +8,16 @@ from .schemas import CalendarLabels
 
 
 async def get_user_locale(from_user: User) -> str:
-    "Returns user locale in format en_US, accepts User instance from Message, CallbackData etc"
-    loc = from_user.language_code
-    return locale.locale_alias[loc].split(".")[0]
+    """Returns user locale in format en_US, accepts User instance from Message, CallbackData etc"""
+    try:
+        if from_user and hasattr(from_user, 'language_code') and from_user.language_code:
+            loc = from_user.language_code
+            # Try to get the locale from locale_alias dictionary
+            return locale.locale_alias.get(loc, "en_US").split(".")[0]
+        return "en_US"
+    except (KeyError, AttributeError, IndexError):
+        # Return a safe default if anything goes wrong
+        return "en_US"
 
 
 class GenericCalendar:
