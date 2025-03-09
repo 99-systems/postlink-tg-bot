@@ -3,7 +3,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardBut
 from aiogram.utils.keyboard import InlineKeyboardBuilder 
 
 
-start_kb = [[KeyboardButton(text='Регистрация')], [KeyboardButton(text='Логин')]]
+start_kb = [[KeyboardButton(text='Регистрация')], [KeyboardButton(text='Авторизация')]]
 start_reply_mu = ReplyKeyboardMarkup(keyboard=start_kb, resize_keyboard=True)
 
 
@@ -11,7 +11,7 @@ back_kb = [[KeyboardButton(text='Назад')]]
 back_reply_mu = ReplyKeyboardMarkup(keyboard=back_kb, is_persistent=False, resize_keyboard=True)
 
 
-city_conf_kb = [[KeyboardButton(text='Да'), KeyboardButton(text='Нет')]]
+city_conf_kb = [[KeyboardButton(text='Да'), KeyboardButton(text='Неверный адрес')]]
 city_conf_reply_mu = ReplyKeyboardMarkup(keyboard=city_conf_kb, resize_keyboard=True)
 
 
@@ -20,11 +20,11 @@ request_location_reply_mu = ReplyKeyboardMarkup(keyboard=request_location_kb, re
 
 request_location_and_back_reply_mu = ReplyKeyboardMarkup(keyboard=[request_location_kb[0], back_kb[0]], resize_keyboard=True)
 
-phone_kb = [[KeyboardButton(text='Отправить номер телефона', request_contact=True)]]
+phone_kb = [[KeyboardButton(text='Поделиться контактом с ботом', request_contact=True)]]
 phone_reply_mu = ReplyKeyboardMarkup(keyboard=phone_kb, resize_keyboard=True)
 
-main_menu_kb = [[KeyboardButton(text='Отправить посылку'),
-                  KeyboardButton(text='Доставить посылку')], 
+main_menu_kb = [[KeyboardButton(text='Хочу отправить посылку'),
+                  KeyboardButton(text='Хочу доставить посылку')], 
                   [KeyboardButton(text='Служба поддержки')],
                 [KeyboardButton(text='Краткая инструкция'), KeyboardButton(text='Выход')]] 
 main_menu_reply_mu = ReplyKeyboardMarkup(keyboard=main_menu_kb, resize_keyboard=True)

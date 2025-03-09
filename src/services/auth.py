@@ -6,7 +6,7 @@ class OTPService:
         self.otp_service_url = otp_service_url
         self.api_key = api_key
     
-    async def send_otp(self, phone_number: str):
+    async def send_otp(self, phone_number: str, length: int = 6):
         
         async with httpx.AsyncClient() as client:
             try:
@@ -16,7 +16,7 @@ class OTPService:
                         'Content-Type': 'application/json',
                         'x-api-key': self.api_key
                     },
-                    json={'phone_number': phone_number}
+                    json={'phone_number': phone_number, 'length': length}
                 )
                 
                 response.raise_for_status()

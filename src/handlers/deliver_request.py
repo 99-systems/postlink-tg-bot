@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from aiogram.fsm.context import FSMContext
 from aiogram import Router, F
 from aiogram.types import ReplyKeyboardRemove
@@ -24,13 +22,13 @@ router = Router()
 async def test(message: Message):
     await message.answer('abc')
 
-@router.message(AppState.menu, or_f(F.text.lower() == 'доставить посылку', Command('/deliver_parcel')))
+@router.message(AppState.menu, or_f(F.text.lower() == 'хочу доставить посылку', Command('/deliver_parcel')))
 async def from_city_choose(message: Message, state: FSMContext):
     await state.set_state(DeliverParcelState.from_city)
     curr_city = crud.get_city_by_tg_id(db, message.from_user.id)
 
-    await message.answer('Давайте создадим заявку, и если появится подходящая посылка, мы вам сообщим!', reply_markup=kb.request_location_and_back_reply_mu)
-    await message.answer('Откуда начинается ваш маршрут?', reply_markup=kb.create_from_curr_city_mu(curr_city))
+    await message.answer('Буду рад помочь с этим! Для этого я задам Вам уточняющие вопросы.', reply_markup=kb.request_location_and_back_reply_mu)
+    await message.answer('<b>Откуда</b> Вы хотите взять заказ (посылку)? (Страна, город)', reply_markup=kb.create_from_curr_city_mu(curr_city), parse_mode='HTML')
     
 @router.message(DeliverParcelState.from_city, F.text.lower() == 'назад')
 async def back_to_menu(message: Message, state: FSMContext):
@@ -55,17 +53,17 @@ async def from_city_confirmation(message: Message, state: FSMContext, place):
     if place:
         await state.update_data(from_city=place["display_name"])
         await state.set_state(DeliverParcelState.from_city_confirmation)
-        await message.answer(f'Отправляете посылку отсюда?: {place["display_name"]}?', reply_markup=kb.city_conf_reply_mu)
+        await message.answer(f'Вы хотите взять заказ (посылку) из города: {place["display_name"]}?', reply_markup=kb.city_conf_reply_mu)
     else:
         await message.answer('Город не найден. Попробуйте еще раз')
 
 
-@router.message(DeliverParcelState.from_city_confirmation, F.text.lower() == 'нет')
+@router.message(DeliverParcelState.from_city_confirmation, F.text.lower() == 'неверный адрес')
 async def from_city_retry(message: Message, state: FSMContext):
     await state.set_state(DeliverParcelState.from_city)
     curr_city = crud.get_city_by_tg_id(db, message.from_user.id)
-    await message.answer('Давайте попробуем еще раз.', reply_markup=kb.request_location_and_back_reply_mu)
-    await message.answer('Откуда начинается ваш маршрут?', reply_markup=kb.create_from_curr_city_mu(curr_city))
+    await message.answer('Прошу прощения, наверное я не правильно Вас понял!', reply_markup=kb.request_location_and_back_reply_mu)
+    await message.answer('Пожалуйста, отправьте название Вашего города еще раз.\nУбедитесь, что Вы не допустили ошибок.', reply_markup=kb.create_from_curr_city_mu(curr_city))
 
     
 @router.message(DeliverParcelState.to_city_confirmation, F.text.lower() == 'нет')
@@ -74,7 +72,7 @@ async def deliver_parcel(message: Message, state: FSMContext, user = None):
     if user is None:
         user = message.from_user
     await state.set_state(DeliverParcelState.to_city)
-    await message.answer('Куда вы отправляетесь?', reply_markup=kb.request_location_and_back_reply_mu)
+    await message.answer('<b>Куда</b> Вы готовы доставить заказ (посылку)? (Страна, город)', reply_markup=kb.request_location_and_back_reply_mu, parse_mode='HTML')
 
 @router.message(DeliverParcelState.to_city, F.text.lower() == 'назад')
 async def back_to_from_city(message: Message, state: FSMContext):
@@ -87,7 +85,7 @@ async def to_city(message: Message, state: FSMContext):
 
     if place:
         await state.set_state(DeliverParcelState.to_city_confirmation)
-        await message.answer(f'Отправляетесь сюда?: {place["display_name"]}?', reply_markup=kb.city_conf_reply_mu)
+        await message.answer(f'Вы хотите доставить посылку в этот город: {place["display_name"]}?', reply_markup=kb.city_conf_reply_mu)
         await state.update_data(to_city=place["display_name"])
     else:
         data = await state.get_data()
@@ -101,16 +99,20 @@ async def date_choose(message: Message, state: FSMContext):
     await message.answer('Выбирите пожалуйста ниже', reply_markup=await DialogCalendar().start_calendar())
     
 
-@router.callback_query(DialogCalendarCallback.filter())
-async def date_confirmation(callback_query: CallbackQuery, callback_data: CallbackData, state: FSMContext):
-    selected, date = await DialogCalendar(
+@router.callback_query(DeliverParcelState.date_choose, DialogCalendarCallback.filter())
+async def date_confirmation(callback_query: CallbackQuery, callback_data: DialogCalendarCallback, state: FSMContext):
+    # Create the calendar instance with user's locale
+    calendar = DialogCalendar(
         locale=await get_user_locale(callback_query.from_user)
-    ).process_selection(callback_query, callback_data)
+    )
+    
+    # Process the selection
+    selected, date = await calendar.process_selection(callback_query, callback_data)
+    
     if selected:
         deliver_date = date.strftime("%d.%m.%Y")
         await state.update_data(deliver_date=deliver_date)
         await state.set_state(DeliverParcelState.date_confirmation)
-
         await callback_query.message.answer(
             f'Вы отправляетесь в {deliver_date} числа?', reply_markup=kb.city_conf_reply_mu
         )
@@ -153,19 +155,21 @@ async def show_request_details(message: Message, state: FSMContext, user = None)
     deliver_date = data.get('deliver_date', 'Не указана')
     size_choose = data.get('size_choose', 'Не указаны')
 
+    delivery_req = crud.create_delivery_request(db, user.id, from_city, to_city, deliver_date, size_choose)
 
     details_message = (
-        f"Детали вашей заявки:\n"
+        f"Детали заявки:\n"
+        f"Статус заявки: Открыта.\n"
+        f"Номер заявки: {delivery_req.id}.\n"
         f"Город отправления: {from_city}\n"
         f"Город назначения: {to_city}\n"
         f"Дата отправления: {deliver_date}\n"
         f"Вес и габариты: {size_choose}\n"
     )
     
-    delivery_req = crud.create_delivery_request(db, user.id, from_city, to_city, deliver_date, size_choose)
     print(vars(delivery_req))
 
-    await message.answer(f'Статус вашей заявки: Открыта.\nНомер заявки: {delivery_req.id}. В ближайшее время мы свяжем вас с отправителем.\n{details_message}', reply_markup=kb.main_menu_open_req_reply_mu)
+    await message.answer(f'Поздравляю! Я открыл для Вас заявку на поиск заказа. Я сообщу, как только по Вашей заявке найдется посылка!\n{details_message}', reply_markup=kb.main_menu_open_req_reply_mu)
     await state.set_state(AppState.menu)
 
     await matcher.match_delivery_request(delivery_req)
