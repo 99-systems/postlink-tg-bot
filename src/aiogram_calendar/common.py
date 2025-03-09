@@ -7,31 +7,34 @@ from datetime import datetime
 from .schemas import CalendarLabels
 
 
+from aiogram.types import User
+
+
+valid_locales = {"en_US.utf8", "C", "C.utf8", "POSIX"}
 
 async def get_user_locale(from_user: User) -> str:
-    """Returns user locale in format en_US, accepts User instance from Message, CallbackData, etc."""
+    """Returns a locale available on Heroku (en_US.utf8 by default)"""
 
-    # Define supported locales (modify as needed)
     safe_locales = {
-        "en": "en_US",
-        "ru": "en_US",  # Heroku limitation: fallback to en_US
-        "uk": "en_US",
-        "de": "en_US",
-        "fr": "en_US",
-        "es": "en_US",
+        "en": "en_US.utf8",
+        "ru": "en_US.utf8", 
+        "uk": "en_US.utf8",
+        "de": "en_US.utf8",
+        "fr": "en_US.utf8",
+        "es": "en_US.utf8",
     }
-    
-    if from_user and hasattr(from_user, "language_code") and from_user.language_code:
-        # Normalize to lowercase
-        lang_code = from_user.language_code.lower()
-        
-        # Try full locale (e.g., 'ru_RU'), fallback to base language (e.g., 'ru')
-        locale = safe_locales.get(lang_code, safe_locales.get(lang_code[:2], "en_US"))
-        
-        # Log if locale is not explicitly mapped
-        return locale
 
-    return "en_US"
+    if from_user and hasattr(from_user, "language_code") and from_user.language_code:
+        lang_code = from_user.language_code.lower()
+        locale_str = safe_locales.get(lang_code[:2], "en_US.utf8")
+
+        if locale_str not in valid_locales:
+            locale_str = "en_US.utf8"
+
+        return locale_str
+
+    return "en_US.utf8"
+
 
 class GenericCalendar:
 
