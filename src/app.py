@@ -1,9 +1,7 @@
 import asyncio
 from src.bot import bot, dp
 from src.handlers import main as main_handler, auth as auth_handler, support as support_handler, menu as menu_handler
-from src.handlers import send_request as send_request_handler
-from src.handlers import deliver_request as deliver_request_handler
-from src.handlers import manage_request as manage_request_handler
+from src.handlers.request import send_request as send_request_handler, deliver_request as deliver_request_handler, manage_request as manage_request_handler
 from src.handlers import admin as admin_handler
 
 from src.handlers import main as main_handler, auth as auth_handler, support as support_handler, menu as menu_handler
