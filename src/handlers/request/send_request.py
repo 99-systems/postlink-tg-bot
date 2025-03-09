@@ -12,21 +12,10 @@ from src.database.models import crud
 from src.database.connection import db
 from src.utils import get_place
 from src.aiogram_calendar import DialogCalendar, DialogCalendarCallback
-
-from .menu import menu
+from src.handlers.menu import menu
 
 
 router = Router()
-
-
-def is_valid_date_range(date_range: str) -> bool:
-    try:
-        start, end = date_range.split('-')
-        start = datetime.strptime(start.strip(), "%d.%m.%Y")
-        end = datetime.strptime(end.strip(), "%d.%m.%Y")
-        return start <= end  # Дата начала не должна быть позже даты конца
-    except Exception:
-        return False
 
 
 @router.message(AppState.menu, or_f(F.text.lower() == 'хочу отправить посылку', Command('/send_parcel')))
@@ -80,7 +69,7 @@ async def to_city_confirmation(message: Message, state: FSMContext):
     else:
         await message.answer('Город не найден. Попробуйте еще раз')
 
-@router.message(SendParcelState.to_city_confirmation, F.text.lower() == 'нет')
+@router.message(SendParcelState.to_city_confirmation, F.text.lower() == 'неверный адрес')
 async def to_city_retry(message: Message, state: FSMContext):
     await state.set_state(SendParcelState.to_city)
     await message.answer('<b>Куда</b> Вы хотите отправить посылку? (Страна, город)', reply_markup=kb.request_location_and_back_reply_mu, parse_mode='HTML')
@@ -129,7 +118,7 @@ async def process_calendar(callback_query: CallbackQuery, callback_data: DialogC
             await callback_query.message.answer(
                 f"Вы выбрали период с {start_date.strftime('%d.%m.%Y')} по {date.strftime('%d.%m.%Y')}.",
                 reply_markup=ReplyKeyboardMarkup(
-                    keyboard=[[KeyboardButton(text='Да'), KeyboardButton(text='Нет')]],
+                    keyboard=[[KeyboardButton(text='Да'), KeyboardButton(text='Я хочу изменить даты')]],
                     resize_keyboard=True,
                     one_time_keyboard=True
                 )
@@ -140,15 +129,14 @@ async def process_calendar(callback_query: CallbackQuery, callback_data: DialogC
             "Произошла ошибка при обработке выбора даты. Пожалуйста, попробуйте снова.",
             reply_markup=await DialogCalendar().start_calendar()
         )
-        
-        
+
 
 @router.message(SendParcelState.date_confirmation, F.text.lower() == 'да')
 async def size_choose(message: Message, state: FSMContext):
     await message.answer('Какой вес и габариты посылки?', reply_markup=kb.sizes_kb)
     await state.set_state(SendParcelState.size_confirmation)
     
-@router.message(SendParcelState.date_confirmation, F.text.lower() == 'нет')
+@router.message(SendParcelState.date_confirmation, F.text.lower() == 'я хочу изменить даты')
 async def date_retry(message: Message, state: FSMContext):
     await date_choose(message, state)
 
@@ -157,7 +145,7 @@ async def date_retry(message: Message, state: FSMContext):
 async def size_kb(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     await state.update_data(size_choose=callback.data.replace('size:', ''))
-    await callback.message.answer('Напишите дополнительные требования или примечания к доставке', reply_markup=kb.no_desc_kb)
+    await callback.message.answer('Есть ли дополнительные требования или примечания для курьера? (Хрупкие товары, электроника, продукты питания)', reply_markup=kb.no_desc_kb)
     await state.set_state(SendParcelState.description)
 
 @router.callback_query(SendParcelState.description, F.text.lower() == 'пропустить')
@@ -188,8 +176,11 @@ async def show_request_details(message: Message, state: FSMContext):
     size_choose = SIZE_TRANSLATION.get(size_choose, size_choose)
     description = data.get('description', 'Не указаны')
 
+    send_req = crud.create_send_request(db, message.from_user.id, from_city, to_city, start_date.strftime("%d.%m.%Y"), end_date.strftime("%d.%m.%Y"), size_choose, description)
     details_message = (
-        f"Детали вашей заявки:\n"
+        f"Детали заявки:\n"
+        "Статус вашей заявки: Открыта.\n"
+        f"Номер заявки: {send_req.id}.\n"
         f"Город отправления: {from_city}\n"
         f"Город назначения: {to_city}\n"
         f"Дата отправления: с {start_date} по {end_date}\n"
@@ -197,12 +188,7 @@ async def show_request_details(message: Message, state: FSMContext):
         f"Дополнительные требования: {description}\n"
     )
 
-    
-    send_req = crud.create_send_request(db, message.from_user.id, from_city, to_city, start_date, end_date, size_choose, description)
-    print(send_req)
-
-
-    await message.answer(f'Статус вашей заявки: Открыта.\nНомер заявки: {send_req.id}. В ближайшее время мы свяжем вас с курьером.\n{details_message}', reply_markup=kb.main_menu_open_req_reply_mu)
+    await message.answer(f'Поздравляю! Я открыл для Вас заявку на поиск курьера. Я сообщу, как только по Вашей заявке найдется доставщик!\n{details_message}', reply_markup=kb.main_menu_open_req_reply_mu)
     await state.set_state(AppState.menu)
 
     await matcher.match_send_request(send_req)

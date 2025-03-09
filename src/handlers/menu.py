@@ -15,9 +15,6 @@ from src.common import keyboard as kb
 router = Router()
 
 
-
-# TODO: Set AppState.menu after authorization
-# Currently it's set with /menu command
 @router.message(or_f(F.text.lower() == 'меню', Command('menu')))
 async def menu(message: Message, state: FSMContext):
     if crud.is_open_request_by_tg_id(db, message.from_user.id):
@@ -55,7 +52,3 @@ async def exit(message: Message, state: FSMContext):
         return
     await message.answer('Вы вышли из аккаунта', reply_markup=kb.start_reply_mu)
     await state.set_state(AppState.initial)
-
-    
-
-

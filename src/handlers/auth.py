@@ -14,9 +14,7 @@ from src.handlers.menu import menu
 
 router = Router()
 
-OTP_CODE_LENGTH = 3
-
-# TODO: Ошибка с хранением данных в состоянии FSM
+OTP_CODE_LENGTH = 4
 
 @router.message(Command("start"))
 async def start(message: Message, state: FSMContext):
@@ -80,7 +78,7 @@ async def handle_phone(message: Message, state: FSMContext):
     
     response = await context.otp_service.send_otp(user_phone, OTP_CODE_LENGTH)
     if 'message' in response:
-        await message.reply(f'Я выслал Вам код подтверждения на WhatsApp по номеру {user_phone}. Прошу отправить мне полученный 3-x значный код.', reply_markup=ReplyKeyboardRemove())
+        await message.reply(f'Я выслал Вам код подтверждения на WhatsApp по номеру {user_phone}. Прошу отправить мне полученный 4-х значный код.', reply_markup=ReplyKeyboardRemove())
         await state.update_data(phone=user_phone)
         await state.set_state(LoginState.otp_code)
     else:
@@ -90,7 +88,7 @@ async def handle_phone(message: Message, state: FSMContext):
 
 @router.message(LoginState.otp_code, F.text.len() != OTP_CODE_LENGTH)
 async def handle_invalid_otp_code(message: Message, state: FSMContext):
-    await message.reply('Это не похоже на 3-х значный код, попробуйте еще раз')
+    await message.reply('Это не похоже на 4-х значный код, попробуйте еще раз')
     await state.set_state(LoginState.otp_code)
 
 @router.message(LoginState.otp_code, F.text.len() == OTP_CODE_LENGTH, F.text.func(str.isdigit))
@@ -142,7 +140,7 @@ async def back_to_start(message: Message, state: FSMContext):
 
 
 @router.message(RegistrationState.name)
-@router.message(RegistrationState.city_confirmation, F.text.lower() == 'нет')
+@router.message(RegistrationState.city_confirmation, F.text.lower() == 'неверный адрес')
 async def handle_name(message: Message, state: FSMContext):
 
     current_state = await state.get_state()
@@ -209,7 +207,7 @@ async def handle_phone(message: Message, state: FSMContext):
     # Sending OTP
     response = await context.otp_service.send_otp(user_phone, OTP_CODE_LENGTH)
     if 'message' in response:
-        await message.reply(f'Я выслал Вам код подтверждения на WhatsApp по номеру {user_phone}. Прошу отправить мне полученный 3-x значный код.', reply_markup=ReplyKeyboardRemove())
+        await message.reply(f'Я выслал Вам код подтверждения на WhatsApp по номеру {user_phone}. Прошу отправить мне полученный 4-х значный код.', reply_markup=ReplyKeyboardRemove())
         await state.update_data(phone=user_phone)
         await state.set_state(RegistrationState.otp_code)
     else:
@@ -219,7 +217,7 @@ async def handle_phone(message: Message, state: FSMContext):
     
 @router.message(RegistrationState.otp_code, F.text.len() != OTP_CODE_LENGTH)
 async def handle_invalid_otp_code(message: Message, state: FSMContext):
-    await message.reply('Это не похоже на 3-x значный код, попробуйте еще раз')
+    await message.reply('Это не похоже на 4-х значный код, попробуйте еще раз')
     await state.set_state(RegistrationState.otp_code)
 
 @router.message(RegistrationState.otp_code, F.text.len() == OTP_CODE_LENGTH, F.text.func(str.isdigit))

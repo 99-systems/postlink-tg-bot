@@ -4,16 +4,12 @@ from aiogram.filters import Filter
 from aiogram.types import Message, ReplyKeyboardRemove
 
 from src.common.states import SupportState
-
 from src.database.models import crud
 from src.database.connection import db
 from src.handlers import menu
-
 from src.services import supp_request_sender as supp_serv
 
 router = Router()
-
-
 
 class SupportProblem:
     def __init__(self, id, name):

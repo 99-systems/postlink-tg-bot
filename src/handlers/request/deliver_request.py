@@ -12,15 +12,11 @@ from src.database.models import crud
 from src.database.connection import db
 from src.utils import get_place
 from src.aiogram_calendar import DialogCalendar, DialogCalendarCallback, get_user_locale
-
-from .menu import menu
+from src.handlers.menu import menu
 
 
 router = Router()
 
-@router.message(F.text.casefold() == 'abc')
-async def test(message: Message):
-    await message.answer('abc')
 
 @router.message(AppState.menu, or_f(F.text.lower() == 'хочу доставить посылку', Command('/deliver_parcel')))
 async def from_city_choose(message: Message, state: FSMContext):
