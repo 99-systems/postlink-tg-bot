@@ -12,6 +12,9 @@ class Config:
     OTP_SERVICE_URL = os.getenv("OTP_SERVICE_URL")
     DEBUG = os.getenv('DEBUG')
     SUPPORT_CHAT_ID = os.getenv('SUPPORT_CHANNEL_CHAT_ID')
+    MONGO_HOST = os.getenv('MONGO_HOST')
+    MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
+    MONGO_USER = os.getenv('MONGO_USER')
 
 config = Config()
 
