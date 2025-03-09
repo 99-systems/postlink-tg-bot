@@ -1,1 +1,1 @@
-from .env_config import *
+from .base import *

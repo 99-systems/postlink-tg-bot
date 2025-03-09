@@ -8,7 +8,6 @@ from src.common.states import SupportState
 from src.database.models import crud
 from src.database.connection import db
 from src.handlers import menu
-from src.config.env_config import config
 
 from src.services import supp_request_sender as supp_serv
 
