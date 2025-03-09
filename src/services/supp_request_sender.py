@@ -8,7 +8,7 @@ from src.bot import bot
 import src.common.keyboard as kb 
 
 import asyncio
-from src.config.env_config import config
+from src.config import config
 
 
 async def send_supp_request(supp_req: SupportRequest):

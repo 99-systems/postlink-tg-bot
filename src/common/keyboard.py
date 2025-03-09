@@ -15,6 +15,11 @@ city_conf_kb = [[KeyboardButton(text='Да'), KeyboardButton(text='Нет')]]
 city_conf_reply_mu = ReplyKeyboardMarkup(keyboard=city_conf_kb, resize_keyboard=True)
 
 
+request_location_kb = [[KeyboardButton(text='Отправить местоположение', request_location=True)]]
+request_location_reply_mu = ReplyKeyboardMarkup(keyboard=request_location_kb, resize_keyboard=True)
+
+city_handler_reply_mu = ReplyKeyboardMarkup(keyboard=[request_location_kb[0], auth_back_kb[0]], resize_keyboard=True)
+
 phone_kb = [[KeyboardButton(text='Отправить номер телефона', request_contact=True)]]
 phone_reply_mu = ReplyKeyboardMarkup(keyboard=phone_kb, resize_keyboard=True)
 

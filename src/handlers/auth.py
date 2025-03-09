@@ -130,12 +130,13 @@ async def handle_otp_code(message: Message, state: FSMContext):
         await message.reply('Ошибка при обработке OTP. Попробуйте позже.')
 
 
+@router.message(RegistrationState.city, F.text == 'Назад')
 @router.message(AppState.initial, or_f(F.text.lower() == 'регистрация', Command('register')))   
 async def registration(message: Message, state: FSMContext):
     await state.set_state(RegistrationState.name)
     await message.reply('Как Вас зовут?', reply_markup=kb.auth_back_reply_mu)
 
-@router.message(StateFilter(RegistrationState), F.text == 'Назад')
+@router.message(StateFilter(RegistrationState.name), F.text == 'Назад')
 async def back_to_start(message: Message, state: FSMContext):
     await state.set_state({})
     await state.set_state(AppState.initial)
@@ -145,41 +146,59 @@ async def back_to_start(message: Message, state: FSMContext):
 @router.message(RegistrationState.name)
 @router.message(RegistrationState.city_confirmation, F.text.lower() == 'нет')
 async def handle_name(message: Message, state: FSMContext):
-    await state.set_state(RegistrationState.city)
 
+    current_state = await state.get_state()
+    
+    if current_state == RegistrationState.name:
+        await state.update_data(name=message.text)
+    
     if message.text.lower() == 'нет':
         data = await state.get_data()
         await state.update_data(try_count=data.get('try_count', 0) + 1)
+    
+    await state.set_state(RegistrationState.city)
 
-    data = await state.get_data()
-    name = data.get('name', message.text)
-    await state.update_data(name=name)
+    state_data = await state.get_data()
+    name = state_data.get('name', message.text)
 
-    text = f'{name}, В каком городе Вы находитесь?'
+    text = f'{name}, В каком городе Вы находитесь?\n\n<i>Можно указать название города или отправить свою геолокацию.</i>'
 
-    if('try_count' in data):
-        text += '\nЕсли не можете найти, можно указать страну с городом.\nКазахстан, Алматы'
-    await message.answer(text, reply_markup=kb.auth_back_reply_mu)
+    if 'try_count' in state_data and state_data['try_count'] > 0:
+        text = f'{name}, В каком городе Вы находитесь?\n\n<i>Если не можете найти, можно указать страну с городом.\nКазахстан, Алматы</i>'
+    await message.answer(text, reply_markup=kb.city_handler_reply_mu, parse_mode='HTML')
     
 @router.message(RegistrationState.city)
 async def handle_city(message: Message, state: FSMContext):
     
-    service_response = await context.places_api.search_text(message.text)
-    
     place = None
+    query = message.text
+
+    if message.location:
+        service_response = await context.nominatim_service.reverse(message.location.latitude, message.location.longitude)
+        address = service_response.get('address', {})
+        place_type = address.get('city') or address.get('town')
+        query = f"{place_type}, {address.get('state', '')}, {address.get('country', '')}"
+
+    service_response = await context.nominatim_service.search(query)
     
-    if 'places' in service_response:
-        place = service_response['places'][0]
+    if service_response:
+        place = next((response_place for response_place in service_response 
+                    if response_place['category'] == 'place' and 
+                        response_place['type'] in ['village', 'town', 'city']), None)
+        
+        if not place:
+            place = next((response_place for response_place in service_response 
+                    if response_place['category'] == 'boundary' and 
+                        response_place['type'] == 'administrative'), None)
     
     if place:
         await state.set_state(RegistrationState.city_confirmation)
-        await message.answer(f'Вы находитесь в городе: {place["formattedAddress"]}?', reply_markup=kb.city_conf_reply_mu)    
-        await state.update_data(city=place["formattedAddress"])
+        await message.answer(f'Вы находитесь в городе: {place["display_name"]}?', reply_markup=kb.city_conf_reply_mu)    
+        await state.update_data(city=place["display_name"])
     else:
         data = await state.get_data()
         await state.update_data(try_count=data.get('try_count', 0) + 1)
-
-        await message.answer('Город не найден. Попробуйте еще раз')
+        await message.answer('Город не найден. Попробуйте еще раз', reply_markup=kb.city_handler_reply_mu)
 
     
 @router.message(RegistrationState.city_confirmation, F.text.lower() == 'да')
