@@ -2,8 +2,10 @@ from datetime import datetime
 
 from aiogram.fsm.context import FSMContext
 from aiogram import Router, F
+from aiogram.types import ReplyKeyboardRemove
 from aiogram.filters import Command, or_f
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
+from aiogram.filters.callback_data import CallbackData
+from aiogram.types import Message, CallbackQuery
 
 import src.services.matcher as matcher
 from src.common.states import AppState, DeliverParcelState
@@ -11,19 +13,12 @@ from src.common import keyboard as kb
 from src.database.models import crud
 from src.database.connection import db
 from src.utils import get_place
+from src.aiogram_calendar import DialogCalendar, DialogCalendarCallback, get_user_locale
 
 from .menu import menu
 
 
 router = Router()
-
-
-def is_valid_date_range(deliver_date: str) -> bool:
-    try:
-        deliver_date = datetime.strptime(deliver_date.strip(), "%d.%m.%Y")
-        return True
-    except ValueError:
-        return False
 
 @router.message(F.text.casefold() == 'abc')
 async def test(message: Message):
@@ -45,14 +40,18 @@ async def back_to_menu(message: Message, state: FSMContext):
 @router.callback_query(DeliverParcelState.from_city, F.data == 'from_city:current')
 async def from_city_kb(callback: CallbackQuery, state: FSMContext):
     curr_city = crud.get_city_by_tg_id(db, callback.from_user.id)
-    await state.update_data(from_city=curr_city)
-    await callback.answer()
-    await deliver_parcel(callback.message, state, callback.from_user)
+    place = {}
+    place['display_name'] = curr_city
+    await from_city_confirmation(callback.message, state, place)
 
 
 @router.message(DeliverParcelState.from_city)
 async def from_city(message: Message, state: FSMContext):
-    place = await get_place(message.text, message)
+    if message:
+        place = await get_place(message.text, message)
+        await from_city_confirmation(message, state, place)
+
+async def from_city_confirmation(message: Message, state: FSMContext, place):
     if place:
         await state.update_data(from_city=place["display_name"])
         await state.set_state(DeliverParcelState.from_city_confirmation)
@@ -77,6 +76,9 @@ async def deliver_parcel(message: Message, state: FSMContext, user = None):
     await state.set_state(DeliverParcelState.to_city)
     await message.answer('Куда вы отправляетесь?', reply_markup=kb.request_location_and_back_reply_mu)
 
+@router.message(DeliverParcelState.to_city, F.text.lower() == 'назад')
+async def back_to_from_city(message: Message, state: FSMContext):
+    await from_city_choose(message, state)
 
 @router.message(DeliverParcelState.to_city)
 async def to_city(message: Message, state: FSMContext):
@@ -95,23 +97,31 @@ async def to_city(message: Message, state: FSMContext):
 @router.message(DeliverParcelState.to_city_confirmation, F.text.lower() == 'да')
 async def date_choose(message: Message, state: FSMContext):
     await state.set_state(DeliverParcelState.date_choose)
-    await message.answer('Какого числа вы отправляетесь в пункт назначения. Напишите дату в формате: 10.02.2025', reply_markup=ReplyKeyboardRemove())
+    await message.answer('Какого числа Вы отправляетесь в пункт назначения?', reply_markup=ReplyKeyboardRemove())
+    await message.answer('Выбирите пожалуйста ниже', reply_markup=await DialogCalendar(locale=await get_user_locale(message.from_user)).start_calendar())
+    
 
-
-@router.message(DeliverParcelState.date_choose)
-async def date_confirmation(message: Message, state: FSMContext):
-    deliver_date = message.text.strip()  
-
-    if is_valid_date_range(message.text):
+@router.callback_query(DialogCalendarCallback.filter())
+async def date_confirmation(callback_query: CallbackQuery, callback_data: CallbackData, state: FSMContext):
+    selected, date = await DialogCalendar(
+        locale=await get_user_locale(callback_query.from_user)
+    ).process_selection(callback_query, callback_data)
+    if selected:
+        deliver_date = date.strftime("%d.%m.%Y")
         await state.update_data(deliver_date=deliver_date)
         await state.set_state(DeliverParcelState.date_confirmation)
-        await message.answer(f'Вы отправляетесь в {deliver_date} числа?', reply_markup=kb.city_conf_reply_mu)
-    else:
-        await message.answer('Неверный формат даты. Попробуйте еще раз в таком формате: 10.02.2025')
 
+        await callback_query.message.answer(
+            f'Вы отправляетесь в {deliver_date} числа?', reply_markup=kb.city_conf_reply_mu
+        )
+        
+@router.message(DeliverParcelState.date_choose)
+async def date_choose_retry(message: Message, state: FSMContext):
+    await message.answer('Пожалуйста, выберайте по календарю')
 
 @router.message(DeliverParcelState.date_confirmation, F.text.lower() == 'да')
 async def size_choose(message: Message, state: FSMContext):
+    await message.answer('Выберите пожалуйтса', reply_markup=ReplyKeyboardRemove())
     await message.answer('Какие ограничения по весу или обьему посылки?', reply_markup=kb.sizes_kb_del)
     await state.set_state(DeliverParcelState.size_choose)
 
