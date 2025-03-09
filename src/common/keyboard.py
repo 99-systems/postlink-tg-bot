@@ -7,8 +7,8 @@ start_kb = [[KeyboardButton(text='Регистрация')], [KeyboardButton(tex
 start_reply_mu = ReplyKeyboardMarkup(keyboard=start_kb, resize_keyboard=True)
 
 
-auth_back_kb = [[KeyboardButton(text='Назад')]]
-auth_back_reply_mu = ReplyKeyboardMarkup(keyboard=auth_back_kb, is_persistent=False, resize_keyboard=True)
+back_kb = [[KeyboardButton(text='Назад')]]
+back_reply_mu = ReplyKeyboardMarkup(keyboard=back_kb, is_persistent=False, resize_keyboard=True)
 
 
 city_conf_kb = [[KeyboardButton(text='Да'), KeyboardButton(text='Нет')]]
@@ -18,7 +18,7 @@ city_conf_reply_mu = ReplyKeyboardMarkup(keyboard=city_conf_kb, resize_keyboard=
 request_location_kb = [[KeyboardButton(text='Отправить местоположение', request_location=True)]]
 request_location_reply_mu = ReplyKeyboardMarkup(keyboard=request_location_kb, resize_keyboard=True)
 
-city_handler_reply_mu = ReplyKeyboardMarkup(keyboard=[request_location_kb[0], auth_back_kb[0]], resize_keyboard=True)
+request_location_and_back_reply_mu = ReplyKeyboardMarkup(keyboard=[request_location_kb[0], back_kb[0]], resize_keyboard=True)
 
 phone_kb = [[KeyboardButton(text='Отправить номер телефона', request_contact=True)]]
 phone_reply_mu = ReplyKeyboardMarkup(keyboard=phone_kb, resize_keyboard=True)

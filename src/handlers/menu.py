@@ -21,9 +21,9 @@ router = Router()
 @router.message(or_f(F.text.lower() == 'меню', Command('menu')))
 async def menu(message: Message, state: FSMContext):
     if crud.is_open_request_by_tg_id(db, message.from_user.id):
-        await message.reply('Что вас интересует?', reply_markup=kb.main_menu_open_req_reply_mu)
+        await message.answer('Что вас интересует?', reply_markup=kb.main_menu_open_req_reply_mu)
     else:
-        await message.reply('Что вас интересует?', reply_markup=kb.main_menu_reply_mu)
+        await message.answer('Что вас интересует?', reply_markup=kb.main_menu_reply_mu)
 
     await state.set_state(AppState.menu)
 
@@ -37,7 +37,7 @@ async def instruction(message: Message, state: FSMContext):
 @router.message(F.text.lower() == 'служба поддержки', AppState.menu)
 async def handle_support(message: Message, state: FSMContext):
     
-    keyboard = [[KeyboardButton(text=problem.name)] for problem in support_problems] + [[KeyboardButton(text='Другое')]]
+    keyboard = [[KeyboardButton(text=problem.name)] for problem in support_problems] + [[KeyboardButton(text='Другое')]] + [[KeyboardButton(text='Назад')]]
     reply_markup = ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
     
     await state.set_state(SupportState.initial)

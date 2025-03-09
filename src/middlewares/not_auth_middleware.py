@@ -16,7 +16,6 @@ class NotAuthMiddlewareMessage(BaseMiddleware):
         user_id = event.from_user.id
         
         if user_id and crud.is_tg_user_exists(db, user_id):
-            await event.answer('Вы уже авторизованы.')
             await menu(event, data.get("state"))
             return
         
