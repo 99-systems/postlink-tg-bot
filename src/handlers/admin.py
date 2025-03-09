@@ -4,7 +4,7 @@ from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.types import FSInputFile, Message
 
-from src.common.generate_excel import generate_excel_file
+from src.utils import generate_excel_file
 from src.common.keyboard import admin_menu_kb
 from src.database.connection import db
 from src.database.models import crud
