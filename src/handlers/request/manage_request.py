@@ -3,13 +3,9 @@ from aiogram import Router, F
 from aiogram.filters import Command, or_f
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 
-import src.context as context
-
 from src.common import keyboard as kb
-
 from src.database.models import crud
 from src.database.models.request import SendRequest, DeliveryRequest
-
 from src.database.connection import db
 
 router = Router()

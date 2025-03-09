@@ -4,16 +4,12 @@ from aiogram.filters import Filter
 from aiogram.types import Message, ReplyKeyboardRemove
 
 from src.common.states import SupportState
-
 from src.database.models import crud
 from src.database.connection import db
 from src.handlers import menu
-
 from src.services import supp_request_sender as supp_serv
 
 router = Router()
-
-
 
 class SupportProblem:
     def __init__(self, id, name):
@@ -59,7 +55,7 @@ async def handle_other_problem(message: Message, state: FSMContext):
 async def handle_known_problem(message: Message, state: FSMContext):
     req = crud.create_supp_request(db, message.from_user.id, message.text)
     await supp_serv.send_supp_request(req)
-    await message.answer(f'В ближайшее время мы свяжемся с Вами для уточнения деталей. Просим ожидать звонка. Ваш номер заявки: {req.id}', reply_markup=ReplyKeyboardRemove())
+    await message.answer(f'В ближайшее время мы свяжемся с Вами для уточнения деталей. Просим ожидать звонка. Номер вашей заявки: {req.id}', reply_markup=ReplyKeyboardRemove())
     await menu.menu(message, state)
     
 @router.message(SupportState.initial, F.text.lower() == 'назад')
@@ -70,7 +66,5 @@ async def back_to_menu(message: Message, state: FSMContext):
 async def handle_other_problem_description(message: Message, state: FSMContext):
     req = crud.create_supp_request(db, message.from_user.id, message.text)
     await supp_serv.send_supp_request(req)
-    await message.answer(f'В ближайшее время мы свяжемся с Вами для уточнения деталей. Просим ожидать звонка. Ваш номер заказа: {req.id}', reply_markup=ReplyKeyboardRemove())
+    await message.answer(f'В ближайшее время мы свяжемся с Вами для уточнения деталей. Просим ожидать звонка. Номер вашей заявки: {req.id}', reply_markup=ReplyKeyboardRemove())
     await menu.menu(message, state)
-
-    
