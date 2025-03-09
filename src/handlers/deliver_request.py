@@ -98,7 +98,7 @@ async def to_city(message: Message, state: FSMContext):
 async def date_choose(message: Message, state: FSMContext):
     await state.set_state(DeliverParcelState.date_choose)
     await message.answer('Какого числа Вы отправляетесь в пункт назначения?', reply_markup=ReplyKeyboardRemove())
-    await message.answer('Выбирите пожалуйста ниже', reply_markup=await DialogCalendar(locale=await get_user_locale(message.from_user)).start_calendar())
+    await message.answer('Выбирите пожалуйста ниже', reply_markup=await DialogCalendar().start_calendar())
     
 
 @router.callback_query(DialogCalendarCallback.filter())
