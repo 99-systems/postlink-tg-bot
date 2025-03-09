@@ -132,7 +132,7 @@ async def handle_otp_code(message: Message, state: FSMContext):
 @router.message(AppState.initial, or_f(F.text.lower() == 'регистрация', Command('register')))   
 async def registration(message: Message, state: FSMContext):
     await state.set_state(RegistrationState.name)
-    await message.reply('Как Вас зовут?', reply_markup=kb.auth_back_reply_mu)
+    await message.reply('Как Вас зовут?', reply_markup=kb.back_reply_mu)
 
 @router.message(StateFilter(RegistrationState.name), F.text.lower() == 'назад')
 async def back_to_start(message: Message, state: FSMContext):
