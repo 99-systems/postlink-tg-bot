@@ -1,23 +1,26 @@
 import asyncio
 from src.bot import bot, dp
-from src.handlers import main as main_handler, auth as auth_handler, support as support_handler, menu as menu_handler
-from src.handlers.request import send_request as send_request_handler, deliver_request as deliver_request_handler, manage_request as manage_request_handler
-from src.handlers import admin as admin_handler
 
-from src.handlers import main as main_handler, auth as auth_handler, support as support_handler, menu as menu_handler
-from src.middlewares.auth_middleware import AuthMiddlewareMessage
-from src.middlewares.not_auth_middleware import NotAuthMiddlewareMessage
-from src.middlewares.open_request import OpenRequestMessageMiddleware, OpenRequestCallbackMiddleware
+from src.handlers.request import send_request as send_request_handler, deliver_request as deliver_request_handler, manage_request as manage_request_handler
+from src.handlers import main as main_handler, auth as auth_handler, support as support_handler, menu as menu_handler, admin as admin_handler
+
+from src.middlewares import AuthMiddlewareMessage, LogMiddleware, NotAuthMiddlewareMessage, OpenRequestMessageMiddleware
 
 async def run():
 
     
     # Middleware configuration
-    main_handler.router.message.middleware(AuthMiddlewareMessage()) #проверяеть на не залогиененного пользователя
-    # main_handler.router.callback_query.middleware(AuthMiddlewareMessage())
-    auth_handler.router.message.middleware(NotAuthMiddlewareMessage()) #проверяет на залогиненного пользователя и он больше не зайти в авторизовацию
+    main_handler.router.message.middleware.register(LogMiddleware())
+    # main_handler.router.message.middleware.register(AuthMiddlewareMessage())    
+    auth_handler.router.message.middleware.register(LogMiddleware())
+    # auth_handler.router.message.middleware.register(NotAuthMiddlewareMessage()) #проверяет на залогиненного пользователя и он больше не зайти в авторизовацию
+    
+    menu_handler.router.message.middleware.register(LogMiddleware())
+    menu_handler.router.message.middleware.register(AuthMiddlewareMessage())
+    
     send_request_handler.router.message.middleware(OpenRequestMessageMiddleware()) #проверяет на наличие открытой заявки
     deliver_request_handler.router.message.middleware(OpenRequestMessageMiddleware()) #проверяет на наличие открытой заявки
+
 
     # Router configuration
     menu_handler.router.include_routers(
@@ -34,7 +37,6 @@ async def run():
         auth_handler.router,
         main_handler.router,
     )
-        
 
     
     from src.database.connection import engine, SessionLocal
