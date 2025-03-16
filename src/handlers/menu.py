@@ -1,7 +1,7 @@
 from aiogram.fsm.context import FSMContext
 from aiogram import Router, F
 from aiogram.filters import Command, or_f
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
 
 
 from src.database.models import crud
@@ -9,9 +9,6 @@ from src.database import db
 
 from src.common.states import AppState, SupportState
 from src.common import keyboard as kb
-
-from .support import support_problems
-
 
 router = Router()
 
@@ -26,20 +23,30 @@ async def handle_menu(message: Message, state: FSMContext):
     await message.answer('Что вас интересует из перечисленного?', reply_markup=reply_markup)
 
 
-@router.message(F.text.lower() == 'краткая инструкция', AppState.menu)
-async def instruction(message: Message, state: FSMContext):
-    await message.answer('Тут будет Инструкция', reply_markup=kb.main_menu_reply_mu)
+SECURITY_LINKS = {
+    "безопасность отправителей": "https://telegra.ph/CHek-list-dlya-otpravitelej-PostLink-03-12",
+    "безопасность курьеров": "https://telegra.ph/CHek-list-dlya-kurerov-PostLink-03-12",
+}
 
+@router.message(F.text.lower().in_(SECURITY_LINKS), AppState.menu)
+async def security_info(message: Message, state: FSMContext):
+    link = SECURITY_LINKS[message.text.lower()]
+    reply_markup = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="Читать", url=link)]]
+    )
+
+    await message.answer(
+        "<b>PostLink</b> очень ценит безопасность наших пользователей! "
+        "Прошу ознакомиться с рекомендациями, которые помогут избежать неудобств!",
+        reply_markup=reply_markup, parse_mode='HTML'
+    )
 
 @router.message(F.text.lower() == 'служба поддержки', AppState.menu)
 async def handle_support(message: Message, state: FSMContext):
     
-    keyboard = [[KeyboardButton(text=problem.name)] for problem in support_problems] + [[KeyboardButton(text='Другое')]] + [[KeyboardButton(text='Назад')]]
-    reply_markup = ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
-    
-    await state.set_state(SupportState.initial)
-    await message.answer('Опишите проблему', reply_markup=reply_markup)
-    
+    await message.answer('Привет! Это служба поддержки PostLink.\nПожалуйста, ответьте на несколько вопросов, и мы сделаем все, что в наших силах!', reply_markup=ReplyKeyboardRemove())
+    await message.answer('Выберите, кто Вы⬇️', reply_markup=kb.user_type_reply_mu)
+    await state.set_state(SupportState.user_type)
     
 @router.message(or_f(F.text.lower() == 'выход', Command('exit')), AppState.menu)
 async def exit(message: Message, state: FSMContext):
