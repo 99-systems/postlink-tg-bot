@@ -9,8 +9,11 @@ class AppState(StatesGroup):
     
     
 class SupportState(StatesGroup):
-    initial = State()
-    unknown_problem_description = State()
+    user_type = State()
+    problem = State()
+    problem_description = State()
+    request_no = State()
+    confirmation = State()
     
 class RegistrationState(StatesGroup):
     name = State()
