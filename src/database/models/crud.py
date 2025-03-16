@@ -239,3 +239,9 @@ def get_all_send_requests(db: Session):
 
 def get_all_delivery_requests(db: Session):
     return db.query(DeliveryRequest).all()
+
+def get_send_request_by_id(db: Session, req_id: int):
+    return db.query(SendRequest).filter(SendRequest.id == req_id).first()
+
+def get_delivery_request_by_id(db: Session, req_id: int):
+    return db.query(DeliveryRequest).filter(DeliveryRequest.id == req_id).first()

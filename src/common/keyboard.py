@@ -2,6 +2,13 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardBut
 
 from aiogram.utils.keyboard import InlineKeyboardBuilder 
 
+from src.handlers.support import support_problems
+
+confirmation_kb = [[KeyboardButton(text='Да'), KeyboardButton(text='Нет')]]
+confirmation_reply_mu = ReplyKeyboardMarkup(keyboard=confirmation_kb, resize_keyboard=True)
+
+user_type_kb = [[KeyboardButton(text='Отправитель'), KeyboardButton(text='Курьер')]]
+user_type_reply_mu = ReplyKeyboardMarkup(keyboard=user_type_kb, resize_keyboard=True)
 
 auth_kb = [[KeyboardButton(text='Регистрация')], [KeyboardButton(text='Авторизация')]]
 auth_reply_mu = ReplyKeyboardMarkup(keyboard=auth_kb, resize_keyboard=True)
@@ -29,16 +36,24 @@ request_location_and_back_reply_mu = ReplyKeyboardMarkup(keyboard=[request_locat
 phone_kb = [[KeyboardButton(text='Поделиться контактом с ботом', request_contact=True)]]
 phone_reply_mu = ReplyKeyboardMarkup(keyboard=phone_kb, resize_keyboard=True)
 
-main_menu_kb = [[KeyboardButton(text='Хочу отправить посылку'),
-                  KeyboardButton(text='Хочу доставить посылку')], 
-                  [KeyboardButton(text='Служба поддержки')],
-                [KeyboardButton(text='Краткая инструкция'), KeyboardButton(text='Выход')]] 
+main_menu_kb = [
+    [KeyboardButton(text='Хочу отправить посылку'), KeyboardButton(text='Хочу доставить посылку')], 
+    [KeyboardButton(text='Безопасность Отправителей'), KeyboardButton(text='Безопасность Курьеров')],
+    [KeyboardButton(text='Служба поддержки')],
+    [KeyboardButton(text='Выход')]
+    ] 
 main_menu_reply_mu = ReplyKeyboardMarkup(keyboard=main_menu_kb, resize_keyboard=True)
 
-main_menu_open_req_kb = [[KeyboardButton(text='Статус заявки'), KeyboardButton(text='Отменить заявку')], 
-                  [KeyboardButton(text='Служба поддержки')],
-                [KeyboardButton(text='Краткая инструкция'), KeyboardButton(text='Выход')]] 
+main_menu_open_req_kb = [
+    [KeyboardButton(text='Статус заявки'), KeyboardButton(text='Отменить заявку')], 
+    [KeyboardButton(text='Безопасность Отправителей'), KeyboardButton(text='Безопасность Курьеров')],
+    [KeyboardButton(text='Служба поддержки')],
+    [KeyboardButton(text='Выход')]
+    ] 
 main_menu_open_req_reply_mu = ReplyKeyboardMarkup(keyboard=main_menu_open_req_kb, resize_keyboard=True)
+
+support_problems_kb = [[KeyboardButton(text=problem.name)] for problem in support_problems]
+support_problems_reply_mu = ReplyKeyboardMarkup(keyboard=support_problems_kb, resize_keyboard=True)
 
 test_b = InlineKeyboardBuilder()
 test_b.row(InlineKeyboardButton(text='Принять', callback_data=f'test'),InlineKeyboardButton(text='Отклонить', callback_data=f'test'))
