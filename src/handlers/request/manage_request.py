@@ -1,12 +1,11 @@
 from aiogram.fsm.context import FSMContext
 from aiogram import Router, F
-from aiogram.filters import Command, or_f
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
+from aiogram.types import Message, CallbackQuery
 
 from src.common import keyboard as kb
 from src.database.models import crud
-from src.database.models.request import SendRequest, DeliveryRequest
-from src.database.connection import db
+from src.database.models.request import SendRequest
+from src.database import db
 
 router = Router()
 

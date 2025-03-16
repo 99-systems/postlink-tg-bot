@@ -3,7 +3,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, Message
 from src.database.models import crud
 from src.database.connection import db
-from src.handlers.menu import menu
+from src.handlers import menu
 
 class NotAuthMiddlewareMessage(BaseMiddleware):
     async def __call__(
@@ -15,8 +15,8 @@ class NotAuthMiddlewareMessage(BaseMiddleware):
         
         user_id = event.from_user.id
         
-        if user_id and crud.is_tg_user_exists(db, user_id):
-            await menu(event, data.get("state"))
+        if user_id and crud.get_session_by_user_id(db, user_id):
+            await menu.handle_menu(event, data.get("state"))
             return
         
         return await handler(event, data)         

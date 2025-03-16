@@ -1,9 +1,8 @@
 from aiogram import BaseMiddleware
 from aiogram.types import Message
 from typing import Callable, Dict, Any, Awaitable
-from sqlalchemy.orm import Session
 from src.database.models import crud
-from src.database.connection import db
+from src.database import db
 
 class AdminOnlyMiddleware(BaseMiddleware):
     async def __call__(
