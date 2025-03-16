@@ -10,12 +10,11 @@ class User(Base):
     phone = Column(String, nullable=False, unique=True)
     name = Column(String, nullable=False)
     city = Column(String, nullable=False)
-    code = Column(String, nullable=True)
-    verified = Column(Boolean, default=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))  
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     telegram_user = relationship("TelegramUser", back_populates="user", uselist=False)
+    session = relationship("TgSession", back_populates="user", uselist=False)
     send_requests = relationship("SendRequest", back_populates="user", cascade="all, delete-orphan")
     delivery_requests = relationship("DeliveryRequest", back_populates="user", cascade="all, delete-orphan")
     support_requests = relationship("SupportRequest", back_populates="user", cascade="all, delete-orphan")
@@ -27,6 +26,7 @@ class TelegramUser(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     telegram = Column(Integer, unique=True, nullable=False, index=True)
     username = Column(String, nullable=True)
+    accepted_terms = Column(Boolean, default=False)
 
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))

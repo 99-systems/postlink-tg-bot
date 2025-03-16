@@ -3,7 +3,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, Update
 from src.database.models import crud
 from src.database.connection import db
-from src.handlers.menu import menu
+from src.handlers import menu
 
 class OpenRequestMessageMiddleware(BaseMiddleware):
     async def __call__(
@@ -20,7 +20,7 @@ class OpenRequestMessageMiddleware(BaseMiddleware):
         try:
             if user_id and crud.is_open_request_by_tg_id(db, user_id):
                 await event.answer('Вы уже создали заявку. Пожалуйста дождитесь ответа или отмените текущую заявку')
-                await menu(event, data.get("state"))
+                await menu.handle_menu(event, data.get("state"))
                 return
         except Exception as e:
             return await handler(event, data)         
@@ -41,7 +41,7 @@ class OpenRequestCallbackMiddleware(BaseMiddleware):
         try:
             if user_id and crud.is_open_request_by_tg_id(db, user_id):
                 await event.answer('Вы уже создали заявку. Пожалуйста дождитесь ответа или отмените текущую заявку')
-                await menu(event, data.get("state"))
+                await menu.handle_menu(event, data.get("state"))
                 return
         except Exception as e:
             return await handler(event, data)         

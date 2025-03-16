@@ -3,9 +3,15 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardBut
 from aiogram.utils.keyboard import InlineKeyboardBuilder 
 
 
-start_kb = [[KeyboardButton(text='Регистрация')], [KeyboardButton(text='Авторизация')]]
-start_reply_mu = ReplyKeyboardMarkup(keyboard=start_kb, resize_keyboard=True)
+auth_kb = [[KeyboardButton(text='Регистрация')], [KeyboardButton(text='Авторизация')]]
+auth_reply_mu = ReplyKeyboardMarkup(keyboard=auth_kb, resize_keyboard=True)
 
+
+terms_kb = [[KeyboardButton(text='Согласен')], [KeyboardButton(text='Не согласен')]]
+terms_reply_mu = ReplyKeyboardMarkup(keyboard=terms_kb, resize_keyboard=True)
+
+open_terms_kb = [[KeyboardButton(text='Открыть пользовательское соглашение')]]
+open_terms_reply_mu = ReplyKeyboardMarkup(keyboard=open_terms_kb, resize_keyboard=True)
 
 back_kb = [[KeyboardButton(text='Назад')]]
 back_reply_mu = ReplyKeyboardMarkup(keyboard=back_kb, is_persistent=False, resize_keyboard=True)

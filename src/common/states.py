@@ -2,7 +2,9 @@ from aiogram.fsm.state import State, StatesGroup
 
 
 class AppState(StatesGroup):
-    initial = State()
+    terms = State()
+    terms_declined = State()
+    auth = State()
     menu = State()
     
     

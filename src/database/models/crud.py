@@ -1,27 +1,54 @@
+from typing import List, Optional
+from datetime import datetime, timezone
+
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from src.database.models.support_req import SupportRequest
 from .user import TelegramUser, User
 from .request import SendRequest, DeliveryRequest
-from typing import List, Optional
-from sqlalchemy import and_, or_
+from .session import TgSession
 
-from datetime import datetime
 
-def create_user(db: Session, tg_id: int, name: str, phone: str, city: str, code: str = None, username: str = None) -> User:
+def create_session(db: Session, user_id: int) -> TgSession: 
+    new_session = TgSession(user_id=user_id)
+    db.add(new_session)
+    db.commit()
+    db.refresh(new_session)
+    return new_session
+
+def delete_session(db: Session, user_id: int):
+    session = db.query(TgSession).filter(TgSession.user_id == user_id).first()
+    db.delete(session)
+    db.commit()
+
+def get_session_by_tg_id(db: Session, tg_id: int) -> Optional[TgSession]:
+    tg_user = db.query(TelegramUser).filter(TelegramUser.telegram == tg_id).first()
+    if not tg_user:
+        return None
+    return db.query(TgSession).filter(TgSession.user_id == tg_user.user_id).first()
+
+def set_user_id_for_tg_user(db: Session, tg_id: int, user_id: int):
+    tg_user = db.query(TelegramUser).filter(TelegramUser.telegram == tg_id).first()
+    tg_user.user_id = user_id
+    db.commit()
+    
+
+def create_user(db: Session, phone: str, name: str, city: str) -> User:
     new_user = User(
-        name=name,
         phone=phone,
+        name=name,
         city=city,
-        code=code,
-        telegram_user=TelegramUser(telegram=tg_id, username=username)
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc)
     )
     
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-
+    
     return new_user
+
 
 def is_user_phone_exists(db: Session, phone: int) -> bool:
     return db.query(User).filter(User.phone == phone).count() > 0
@@ -57,6 +84,22 @@ def get_city_by_tg_id(db: Session, tg_id: int) -> str:
 
 def get_user_by_tg_id(db: Session, tg_id: int) -> User:
     return db.query(User).join(TelegramUser).filter(TelegramUser.telegram == tg_id).first()
+
+def add_tg_user(db, tg_id: int, username: str = None):
+    new_tg_user = TelegramUser(telegram=tg_id, username=username)
+    db.add(new_tg_user)
+    db.commit()
+    db.refresh(new_tg_user)
+
+    return new_tg_user
+
+def get_tg_user(db: Session, tg_id: int) -> TelegramUser:
+    return db.query(TelegramUser).filter(TelegramUser.telegram == tg_id).first()
+
+def accept_terms(db: Session, tg_id: int):
+    tg_user = get_tg_user(db, tg_id)
+    tg_user.accepted_terms = True
+    db.commit()
 
 
 def create_send_request(db: Session, tg_id: int, from_location: str, to_location: str, from_date: str, to_date: str, size_type: str, description: str = None) -> SendRequest:

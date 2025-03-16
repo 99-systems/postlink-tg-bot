@@ -2,17 +2,16 @@ from aiogram.fsm.context import FSMContext
 from aiogram import Router, F
 from aiogram.types import ReplyKeyboardRemove
 from aiogram.filters import Command, or_f
-from aiogram.filters.callback_data import CallbackData
 from aiogram.types import Message, CallbackQuery
 
 import src.services.matcher as matcher
 from src.common.states import AppState, DeliverParcelState
 from src.common import keyboard as kb
 from src.database.models import crud
-from src.database.connection import db
+from src.database import db
 from src.utils import get_place
 from src.aiogram_calendar import DialogCalendar, DialogCalendarCallback, get_user_locale
-from src.handlers.menu import menu
+from src.handlers import menu
 
 
 router = Router()
@@ -28,7 +27,7 @@ async def from_city_choose(message: Message, state: FSMContext):
     
 @router.message(DeliverParcelState.from_city, F.text.lower() == 'назад')
 async def back_to_menu(message: Message, state: FSMContext):
-    await menu(message, state)
+    await menu.handle_menu(message, state)
 
 
 @router.callback_query(DeliverParcelState.from_city, F.data == 'from_city:current')

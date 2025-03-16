@@ -9,11 +9,10 @@ import src.services.matcher as matcher
 from src.common.states import AppState, SendParcelState
 from src.common import keyboard as kb
 from src.database.models import crud
-from src.database.connection import db
+from src.database import db
 from src.utils import get_place
 from src.aiogram_calendar import DialogCalendar, DialogCalendarCallback
-from src.handlers.menu import menu
-
+from src.handlers import menu
 
 router = Router()
 
@@ -27,7 +26,7 @@ async def send_parcel(message: Message, state: FSMContext):
 
 @router.message(SendParcelState.from_city, F.text.lower() == 'назад')
 async def back_to_menu(message: Message, state: FSMContext):
-    await menu(message, state)
+    await menu.handle_menu(message, state)
 
 @router.callback_query(SendParcelState.from_city, F.data == 'from_city:current')
 async def from_city_kb(callback: CallbackQuery, state: FSMContext):
