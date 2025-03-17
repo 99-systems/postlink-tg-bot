@@ -5,6 +5,7 @@ from aiogram import Router, F
 from aiogram.filters import Command, or_f
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
 
+from src.services import sheets
 import src.services.matcher as matcher
 from src.common.states import AppState, SendParcelState
 from src.common import keyboard as kb
@@ -186,6 +187,8 @@ async def show_request_details(message: Message, state: FSMContext):
         f"Вес и габариты: {size_choose}\n"
         f"Дополнительные требования: {description}\n"
     )
+    
+    sheets.record_add_send_req(send_req)
 
     await message.answer(f'Поздравляю! Я открыл для Вас заявку на поиск курьера. Я сообщу, как только по Вашей заявке найдется доставщик!\n{details_message}', reply_markup=kb.main_menu_open_req_reply_mu)
     await state.set_state(AppState.menu)

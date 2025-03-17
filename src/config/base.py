@@ -15,6 +15,7 @@ class Config:
     MONGO_HOST = os.getenv('MONGO_HOST')
     MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
     MONGO_USER = os.getenv('MONGO_USER')
+    GOOGLE_SHEETS_API_KEY = os.getenv('GOOGLE_SHEETS_API_KEY')
 
 config = Config()
 

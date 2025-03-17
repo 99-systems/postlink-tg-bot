@@ -17,6 +17,7 @@ from src.handlers.auth.common import handle_success_auth, handle_back_start
 from .filters import PhoneNumberFilter
 from .utils import format_phone_number
 
+from src.services import sheets 
 
 
 @router.message(RegistrationState.city, F.text.lower() == 'назад')
@@ -124,10 +125,15 @@ async def handle_otp_code(message: Message, state: FSMContext):
     if response.get('message') == 'OTP verified successfully':
         try:
             user = crud.create_user(db, phone=phone, name=data.get('name'), city=data.get('city'))
+            print('do set')
             crud.set_user_id_for_tg_user(db, message.from_user.id, user.id)
+            print('do session')
             crud.create_session(db, user_id=user.id)
+            print('do rec')
+            sheets.record_add_user(user)
             
         except Exception as e:
+            print(e)
             await message.reply('Ошибка при регистрации пользователя')
             await handle_back_start(message, state)
             return

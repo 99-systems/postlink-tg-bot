@@ -28,3 +28,17 @@ async def export_requests(message: Message):
         file = FSInputFile(filename)
         await message.answer_document(file)
         os.remove(filename) 
+
+
+@router.message(F.text.lower() == "онлайн таблица")
+async def export_requests(message: Message):
+    filenames = generate_excel_file()
+
+    if not filenames:
+        await message.answer("Нет данных для экспорта.")
+        return
+
+    for filename in filenames:
+        file = FSInputFile(filename)
+        await message.answer_document(file)
+        os.remove(filename) 
