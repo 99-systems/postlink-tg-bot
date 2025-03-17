@@ -4,8 +4,11 @@ from aiogram.types import ReplyKeyboardRemove
 from aiogram.filters import Command, or_f
 from aiogram.types import Message, CallbackQuery
 
+
 import src.services.matcher as matcher
 from src.services import sheets
+from src.services import request_reminder
+
 from src.common.states import AppState, DeliverParcelState
 from src.common import keyboard as kb
 from src.database.models import crud
@@ -164,6 +167,7 @@ async def show_request_details(message: Message, state: FSMContext, user = None)
     )
     
     sheets.record_add_deliver_req(delivery_req)
+    await request_reminder.send_request(delivery_req)
     await message.answer(f'Поздравляю! Я открыл для Вас заявку на поиск заказа. Я сообщу, как только по Вашей заявке найдется посылка!\n{details_message}', reply_markup=kb.main_menu_open_req_reply_mu)
     await state.set_state(AppState.menu)
 
