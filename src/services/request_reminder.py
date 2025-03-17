@@ -28,13 +28,13 @@ async def send_request(req: Union[SendRequest, DeliveryRequest]):
         text += f"🚚 <b>Тип заявки:</b> Отправка\n"
         text += f"📍 <b>Откуда:</b> {req.from_location}\n"
         text += f"🏁 <b>Куда:</b> {req.to_location}\n"
-        text += f"📅 <b>Дата отправки:</b> {req.from_date.strftime('%Y-%m-%d %H:%M')}\n"
-        text += f"📅 <b>Дата получения:</b> {req.to_date.strftime('%Y-%m-%d %H:%M')}\n"
+        text += f"📅 <b>Дата отправки с:</b> {req.from_date.strftime('%Y-%m-%d %H:%M')}\n"
+        text += f"📅 <b>Дата отправки до:</b> {req.to_date.strftime('%Y-%m-%d %H:%M')}\n"
     elif isinstance(req, DeliveryRequest):
         text += f"🚚 <b>Тип заявки:</b> Доставка\n"
         text += f"📍 <b>Откуда:</b> {req.from_location}\n"
         text += f"🏁 <b>Куда:</b> {req.to_location}\n"
-        text += f"📅 <b>Дата доставки:</b> {req.delivery_date.strftime('%Y-%m-%d %H:%M')}\n"
+        text += f"📅 <b>Дата отправления:</b> {req.delivery_date.strftime('%Y-%m-%d %H:%M')}\n"
 
     if req.size_type:
         text += f"📦 <b>Вес и габариты:</b> {req.size_type}\n"
