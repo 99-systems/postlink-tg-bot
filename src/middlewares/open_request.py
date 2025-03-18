@@ -34,7 +34,7 @@ class OpenRequestCallbackMiddleware(BaseMiddleware):
         data: Dict[str, Any]
     ) -> Any:
         try:
-            user_id = event.from_user.id
+            user_id = event.message.from_user.id
         except Exception as e:
             return await handler(event, data)         
 
