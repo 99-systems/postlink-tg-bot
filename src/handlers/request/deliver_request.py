@@ -32,6 +32,7 @@ async def back_to_menu(message: Message, state: FSMContext):
 
 @router.callback_query(DeliverParcelState.from_city, F.data == 'from_city:current')
 async def from_city_kb(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
     curr_city = crud.get_city_by_tg_id(db, callback.from_user.id)
     place = {}
     place['display_name'] = curr_city
@@ -91,15 +92,13 @@ async def to_city(message: Message, state: FSMContext):
 async def date_choose(message: Message, state: FSMContext):
     await state.set_state(DeliverParcelState.date_choose)
     await message.answer('Какого числа Вы отправляетесь в пункт назначения?', reply_markup=ReplyKeyboardRemove())
-    await message.answer('Выбирите пожалуйста ниже', reply_markup=await DialogCalendar().start_calendar())
+    await message.answer('Выберите пожалуйста, ниже на календаре', reply_markup=await DialogCalendar().start_calendar())
     
 
 @router.callback_query(DeliverParcelState.date_choose, DialogCalendarCallback.filter())
 async def date_confirmation(callback_query: CallbackQuery, callback_data: DialogCalendarCallback, state: FSMContext):
     # Create the calendar instance with user's locale
-    calendar = DialogCalendar(
-        locale=await get_user_locale(callback_query.from_user)
-    )
+    calendar = DialogCalendar()
     
     # Process the selection
     selected, date = await calendar.process_selection(callback_query, callback_data)

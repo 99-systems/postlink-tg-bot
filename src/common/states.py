@@ -20,10 +20,12 @@ class RegistrationState(StatesGroup):
     city = State()
     city_confirmation = State()
     phone = State()
+    request_otp_code = State()
     otp_code = State()
 
 class LoginState(StatesGroup):
     phone = State()
+    request_otp_code = State()
     otp_code = State()
 
 class SendParcelState(StatesGroup):

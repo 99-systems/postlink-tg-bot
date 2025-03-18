@@ -68,7 +68,6 @@ class DialogCalendar(GenericCalendar):
         def format_day_string():
             date_to_check = datetime(current_year, month, day)
             
-            # Check if date is in allowed range
             if self.min_date and date_to_check < self.min_date:
                 return superscript(str(day))
             elif self.max_date and date_to_check > self.max_date:
@@ -130,7 +129,7 @@ class DialogCalendar(GenericCalendar):
         # Back to months button
         back_row = []
         back_row.append(InlineKeyboardButton(
-            text="« Back to months",
+            text="« Назад к месяцам",
             callback_data=DialogCalendarCallback(act=DialogCalAct.start, year=current_year, month=-1, day=-1).pack()
         ))
         kb.append(back_row)
