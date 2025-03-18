@@ -74,13 +74,8 @@ async def handle_confirmation(message: Message, state: FSMContext):
     
     state_data = await state.get_data()
     
-    reply_markup = (kb.main_menu_open_req_reply_mu 
-                if crud.is_open_request_by_tg_id(db, message.from_user.id) 
-                else kb.main_menu_reply_mu)
-    
-    
-    
     support_request = crud.create_supp_request(db, message.from_user.id, state_data['problem_description'], state_data['user_type'], state_data['request_no'])
     await supp_serv.send_supp_request(support_request)
     
-    await message.answer('Спасибо! Мы получили вашу заявку и свяжемся с вами в ближайшее время.', reply_markup=reply_markup)
+    await message.answer('Спасибо! Мы получили вашу заявку и свяжемся с вами в ближайшее время.')
+    await menu.handle_menu(message, state)

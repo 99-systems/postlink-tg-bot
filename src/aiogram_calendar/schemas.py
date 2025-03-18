@@ -42,7 +42,6 @@ class DialogCalendarCallback(CalendarCallback, prefix="dialog_calendar"):
 
 
 class CalendarLabels(BaseModel):
-    "Schema to pass labels for calendar. Can be used to put in different languages"
     days_of_week: List[str] = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
     months: List[str] = [
         "Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"

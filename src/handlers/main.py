@@ -33,7 +33,7 @@ async def start(message: Message, state: FSMContext):
 ‼️Перед началом работы ознакомьтесь с Пользовательским соглашением:
 ''')    
         await state.set_state(AppState.terms)
-        await send_terms(message)
+        await send_terms(message, state)
         
     
 async def handle_start(message: Message, state: FSMContext):
@@ -53,7 +53,8 @@ async def decline_terms(message: Message, state: FSMContext):
 
 
 @router.message(F.text.lower() == 'открыть пользовательское соглашение', AppState.terms_declined)
-async def send_terms(message: Message):
+async def send_terms(message: Message, state: FSMContext):
+    await state.set_state(AppState.terms)
     await message.answer_document(document=FSInputFile('src/files/user_agreement.pdf', 'Пользовательское соглашение'), caption='✅ Нажимая «Согласен», ты подтверждаешь, что ознакомился с условиями использования сервиса.', reply_markup=kb.terms_reply_mu)
     
 
