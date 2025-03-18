@@ -91,9 +91,30 @@ async def handle_phone_number(message: Message, state: FSMContext):
         await state.update_data(phone=user_phone)
         await state.set_state(RegistrationState.otp_code)
     else:
+        await message.reply(f'Мне не удалось отправить код на WhatsApp по вашему номеру {user_phone}.\nПожалуйста, убедитесь что номер корректный.')
+        await handle_city_confirmation(message, state)
+        return
+
+@router.message(RegistrationState.phone)
+async def handle_invalid_phone_number(message: Message, state: FSMContext):
+    await message.answer('Это не похоже на номер телефона, давайте попробуем снова! Прошу написать номер телефона в таком формате: +7/8XXXXXXXXXX', reply_markup=kb.phone_reply_mu)
+
+
+@router.message(RegistrationState.request_otp_code, F.text.lower() == 'отправить код')
+async def handle_request_otp_code(message: Message, state: FSMContext):
+    data = await state.get_data()
+    user_phone = data.get('phone')
+    
+    response = await context.otp_service.send_otp(user_phone, OTP_CODE_LENGTH)
+    if 'message' in response:
+        await message.reply(f'Я выслал Вам код подтверждения на WhatsApp по номеру {user_phone}. Прошу отправить мне полученный 4-х значный код.', reply_markup=ReplyKeyboardRemove())
+        await state.update_data(phone=user_phone)
+        await state.set_state(RegistrationState.otp_code)
+    else:
         await message.reply('Попробуйте еще раз')
         await state.set_state(RegistrationState.phone)
         return
+    
     
 @router.message(RegistrationState.otp_code, F.text.len() != OTP_CODE_LENGTH)
 async def handle_invalid_otp_code(message: Message, state: FSMContext):
@@ -109,14 +130,14 @@ async def handle_otp_code(message: Message, state: FSMContext):
 
     # Обработка ошибок верификации OTP
     error_messages = {
-        'OTP has expired. Please request a new one.': (RegistrationState.phone, 'Код устарел, запросите новый код'),
-        'OTP has already been used.': (RegistrationState.phone, 'Код уже использован, запросите новый код'),
-        'Invalid OTP or phone number.': (RegistrationState.otp_code, 'Неверный код. Попробуйте еще раз')
+        'OTP has expired. Please request a new one.': (RegistrationState.request_otp_code, 'Код устарел, запросите новый код', kb.send_otp_code_reply_mu),
+        'OTP has already been used.': (RegistrationState.request_otp_code, 'Код уже использован, запросите новый код', kb.send_otp_code_reply_mu),
+        'Invalid OTP or phone number.': (RegistrationState.otp_code, 'Неверный код. Попробуйте еще раз', ReplyKeyboardRemove()),
     }
 
     if 'detail' in response:
-        state_target, error_msg = error_messages.get(response['detail'], (RegistrationState.phone, 'Ошибка при верификации кода'))
-        await message.reply(error_msg)
+        state_target, error_msg, reply_markup = error_messages.get(response['detail'], (RegistrationState.phone, 'Ошибка при верификации кода'))
+        await message.reply(error_msg, reply_markup=reply_markup)
         await state.set_state(state_target)
         return
 

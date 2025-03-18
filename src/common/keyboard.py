@@ -4,6 +4,9 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from src.handlers.support import support_problems
 
+send_otp_code_kb = [[KeyboardButton(text='Отправить код')]]
+send_otp_code_reply_mu = ReplyKeyboardMarkup(keyboard=send_otp_code_kb, resize_keyboard=True)
+
 confirmation_kb = [[KeyboardButton(text='Да'), KeyboardButton(text='Нет')]]
 confirmation_reply_mu = ReplyKeyboardMarkup(keyboard=confirmation_kb, resize_keyboard=True)
 
@@ -77,7 +80,7 @@ sizes_kb_builder.row(InlineKeyboardButton(text='Большая – до 10 кг,
 sizes_kb_builder.row(InlineKeyboardButton(text='Крупногабаритная – более 10 кг, более 50 см по одной из сторон', callback_data=f'size:extra_large'))
 sizes_kb = sizes_kb_builder.as_markup()
 
-sizes_kb_builder.row(InlineKeyboardButton(text='Пропустить', callback_data=f'size:skip'))
+sizes_kb_builder.row(InlineKeyboardButton(text='Любую из вышеперечисленных', callback_data=f'size:skip'))
 sizes_kb_del = sizes_kb_builder.as_markup()
 
 no_desc = [[KeyboardButton(text='Пропустить')]]
