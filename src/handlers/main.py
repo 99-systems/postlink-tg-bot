@@ -55,7 +55,7 @@ async def decline_terms(message: Message, state: FSMContext):
 @router.message(F.text.lower() == 'открыть пользовательское соглашение', AppState.terms_declined)
 async def send_terms(message: Message, state: FSMContext):
     await state.set_state(AppState.terms)
-    await message.answer_document(document=FSInputFile('src/files/user_agreement.pdf', 'Пользовательское соглашение'), caption='✅ Нажимая «Согласен», ты подтверждаешь, что ознакомился с условиями использования сервиса.', reply_markup=kb.terms_reply_mu)
+    await message.answer_document(document=FSInputFile('src/files/user_agreement.pdf', 'Пользовательское соглашение.pdf'), caption='✅ Нажимая «Согласен», ты подтверждаешь, что ознакомился с условиями использования сервиса.', reply_markup=kb.terms_reply_mu)
     
 
 @router.message(AppState.terms)
