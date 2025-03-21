@@ -5,6 +5,8 @@ from src.handlers.request import send_request as send_request_handler, deliver_r
 from src.handlers import main as main_handler, auth as auth_handler, support as support_handler, menu as menu_handler, admin as admin_handler
 
 from src.middlewares import AuthMiddlewareMessage, LogMiddleware, NotAuthMiddlewareMessage, OpenRequestMessageMiddleware
+from src.middlewares.open_request import OpenRequestCallbackMiddleware
+
 
 async def run():
 
@@ -19,7 +21,9 @@ async def run():
     menu_handler.router.message.middleware.register(AuthMiddlewareMessage())
     
     send_request_handler.router.message.middleware(OpenRequestMessageMiddleware()) #проверяет на наличие открытой заявки
+    # send_request_handler.router.callback_query.middleware(OpenRequestCallbackMiddleware()) #проверяет на наличие открытой заявки
     deliver_request_handler.router.message.middleware(OpenRequestMessageMiddleware()) #проверяет на наличие открытой заявки
+    # deliver_request_handler.router.callback_query.middleware(OpenRequestCallbackMiddleware()) #проверяет на наличие открытой заявки
 
 
     # Router configuration

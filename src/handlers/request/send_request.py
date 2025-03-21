@@ -5,6 +5,7 @@ from aiogram import Router, F
 from aiogram.filters import Command, or_f
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
 
+from src.services import request_reminder, sheets
 import src.services.matcher as matcher
 from src.common.states import AppState, SendParcelState
 from src.common import keyboard as kb
@@ -204,32 +205,19 @@ async def show_request_details(message: Message, state: FSMContext):
         size_choose = SIZE_TRANSLATION.get(size_choose, size_choose)
         description = data.get('description', 'Не указаны')
 
-        # Format dates
-        start_date_str = start_date.strftime("%d.%m.%Y") if isinstance(start_date, datetime) else 'Не указана'
-        end_date_str = end_date.strftime("%d.%m.%Y") if isinstance(end_date, datetime) else 'Не указана'
-
-        send_req = crud.create_send_request(
-            db, 
-            message.from_user.id, 
-            from_city, 
-            to_city, 
-            start_date_str, 
-            end_date_str, 
-            size_choose, 
-            description
-        )
-        
+        send_req = crud.create_send_request(db, message.from_user.id, from_city, to_city, start_date.strftime("%d.%m.%Y"), end_date.strftime("%d.%m.%Y"), size_choose, description)
         details_message = (
             f"Детали заявки:\n"
-            f"Статус вашей заявки: Открыта\n"
-            f"Номер заявки: {send_req.id}\n"
+            "Статус вашей заявки: Открыта.\n"
+            f"Номер заявки: {send_req.id}.\n"
             f"Город отправления: {from_city}\n"
             f"Город назначения: {to_city}\n"
-            f"Дата отправления: с {start_date_str} по {end_date_str}\n"
+            f"Дата отправления: с {start_date} по {end_date}\n"
             f"Вес и габариты: {size_choose}\n"
             f"Дополнительные требования: {description}\n"
         )
-
+        sheets.record_add_send_req(send_req)
+        await request_reminder.send_request(send_req)
         await message.answer(
             f'Поздравляю! Я открыл для Вас заявку на поиск курьера. Я сообщу, как только по Вашей заявке найдется доставщик!\n\n{details_message}', 
             reply_markup=kb.main_menu_open_req_reply_mu

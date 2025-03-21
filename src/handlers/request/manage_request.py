@@ -7,6 +7,8 @@ from src.database.models import crud
 from src.database.models.request import SendRequest
 from src.database import db
 
+from src.services import sheets
+
 router = Router()
 
 
@@ -49,8 +51,10 @@ async def close_request_kb(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     if req_type == 'send':
         crud.close_send_request(db, req_id)
+        sheets.record_close_send_req(req_id)
     elif req_type == 'delivery': 
         crud.close_delivery_request(db, req_id)
+        sheets.record_close_deliver_req(req_id)
     else:
         await callback.answer('Ошибка при закрытии заявки')
         return
