@@ -1,12 +1,15 @@
-from gspread import Client, Spreadsheet, Worksheet, service_account
-from src.config.base import config
+import json
+from gspread import Client, Spreadsheet, service_account_from_dict
+
+
+from src.config import config
 from src.database.models.user import User
 from src.database.models.request import DeliveryRequest, SendRequest
-from datetime import datetime
 
 
 def client_init_json() -> Client:
-    return service_account(filename='postlink-sheets.json')
+    creds = json.loads(config.SERVICE_ACCOUNT_CREDS)
+    return service_account_from_dict(creds)
 
 
 def get_table(client: Client, table_url: str = config.GOOGLE_SHEETS_API_KEY) -> Spreadsheet:
