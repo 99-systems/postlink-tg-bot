@@ -15,6 +15,13 @@ router = Router()
 @router.message(AppState.menu, Command('start'))
 @router.message(or_f(F.text.lower() == 'меню', Command('menu')))
 async def handle_menu(message: Message, state: FSMContext):
+    # Check if user authenticated
+    
+    if not crud.get_session_by_tg_id(db, message.from_user.id):
+        await message.answer('Авторизуйтесь пожалуйста, чтобы продолжить', reply_markup=kb.auth_reply_mu)
+        await state.set_state(AppState.auth)
+        return
+    
     await state.set_state(AppState.menu)
     reply_markup = (kb.main_menu_open_req_reply_mu 
                     if crud.is_open_request_by_tg_id(db, message.from_user.id) 

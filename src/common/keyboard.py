@@ -4,6 +4,9 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from src.handlers.support import support_problems
 
+not_received_otp_code_kb = [[KeyboardButton(text='Код не был отправлен')]]
+not_received_otp_code_reply_mu = ReplyKeyboardMarkup(keyboard=not_received_otp_code_kb, resize_keyboard=True)
+
 send_otp_code_kb = [[KeyboardButton(text='Отправить код')]]
 send_otp_code_reply_mu = ReplyKeyboardMarkup(keyboard=send_otp_code_kb, resize_keyboard=True)
 
