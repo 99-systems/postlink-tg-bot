@@ -28,14 +28,16 @@ async def run():
 
     # Router configuration
     menu_handler.router.include_routers(
-        support_handler.router,
         send_request_handler.router,
         deliver_request_handler.router,
         manage_request_handler.router,
         admin_handler.router
     )
     
-    main_handler.router.include_router(menu_handler.router)
+    main_handler.router.include_routers(
+        support_handler.router,
+        menu_handler.router
+    )
 
     dp.include_routers(
         auth_handler.router,

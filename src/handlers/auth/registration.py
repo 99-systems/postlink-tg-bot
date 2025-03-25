@@ -1,6 +1,6 @@
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command, or_f
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.types import Message, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
 from aiogram import F
 
 
@@ -69,7 +69,7 @@ async def handle_city(message: Message, state: FSMContext):
 @router.message(RegistrationState.city_confirmation, F.text.lower() == 'да')
 async def handle_city_confirmation(message: Message, state: FSMContext):
     await state.set_state(RegistrationState.phone)
-    await message.answer('Можно узнать Ваш сотовый номер телефона?', reply_markup=kb.phone_reply_mu)
+    await message.answer('Можно узнать Ваш сотовый номер телефона, привязанный к Whatsapp?', reply_markup=kb.phone_reply_mu)
     
     
     
@@ -88,13 +88,25 @@ async def handle_phone_number(message: Message, state: FSMContext):
     
     response = await context.otp_service.send_otp(user_phone, OTP_CODE_LENGTH)
     if 'message' in response:
-        await message.reply(f'Я выслал Вам код подтверждения на WhatsApp по номеру {user_phone}. Прошу отправить мне полученный 4-х значный код.', reply_markup=ReplyKeyboardRemove())
+        await message.reply(f'Я выслал Вам код подтверждения на WhatsApp по номеру {user_phone}. Прошу отправить мне полученный 4-х значный код.', reply_markup=kb.not_received_otp_code_reply_mu)
         await state.update_data(phone=user_phone)
+        await state.update_data(wrong_otp_count=(await state.get_data()).get('wrong_otp_count', 0))
         await state.set_state(RegistrationState.otp_code)
     else:
         await message.reply(f'Мне не удалось отправить код на WhatsApp по вашему номеру {user_phone}.\nПожалуйста, убедитесь что номер корректный.')
         await handle_city_confirmation(message, state)
         return
+    
+@router.message(RegistrationState.phone, F.text.lower() == 'код все еще не был отправлен')
+async def handle_final_code_not_sent(message: Message, state: FSMContext):
+    await message.answer('В случае, если вы не получили код, при этом указав правильный номер Whatsapp в формате: +7705 777 7777, то предлагаем обратиться в Службу Поддержки', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Служба поддержки')]], resize_keyboard=True))
+    await state.set_state(RegistrationState.phone)
+    
+
+@router.message(RegistrationState.phone, F.text.lower() == 'служба поддержки')
+async def handle_support(message: Message, state: FSMContext):
+    from src.handlers.menu import handle_support
+    await handle_support(message, state)
 
 @router.message(RegistrationState.phone)
 async def handle_invalid_phone_number(message: Message, state: FSMContext):
@@ -108,14 +120,27 @@ async def handle_request_otp_code(message: Message, state: FSMContext):
     
     response = await context.otp_service.send_otp(user_phone, OTP_CODE_LENGTH)
     if 'message' in response:
-        await message.reply(f'Я выслал Вам код подтверждения на WhatsApp по номеру {user_phone}. Прошу отправить мне полученный 4-х значный код.', reply_markup=ReplyKeyboardRemove())
+        await message.reply(f'Я выслал Вам код подтверждения на WhatsApp по номеру {user_phone}. Прошу отправить мне полученный 4-х значный код.', reply_markup=kb.not_received_otp_code_reply_mu)
         await state.update_data(phone=user_phone)
         await state.set_state(RegistrationState.otp_code)
     else:
         await message.reply('Попробуйте еще раз')
         await state.set_state(RegistrationState.phone)
         return
+
+@router.message(RegistrationState.otp_code, F.text.lower() == 'код не был отправлен')
+async def handle_code_not_sent(message: Message, state: FSMContext):
     
+    await state.update_data(code_not_sent_count=(await state.get_data()).get('code_not_sent_count', 0) + 1)
+    if (await state.get_data()).get('code_not_sent_count', 0) >= 2:
+        user_phone = (await state.get_data()).get('phone')
+        await context.otp_service.send_otp(user_phone, OTP_CODE_LENGTH)
+        await message.answer('Просим прощения за неудобство! Повторно отправляю код. Так же прошу перепроверить, правильно ли указан номер, на который зарегестрирован Ваш Whatsapp.', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Код все еще не был отправлен')]], resize_keyboard=True))
+        await state.set_state(RegistrationState.phone)
+        return
+    
+    await message.answer('Давайте попробуем еще раз', reply_markup=ReplyKeyboardRemove())
+    await handle_city_confirmation(message, state)
     
 @router.message(RegistrationState.otp_code, F.text.len() != OTP_CODE_LENGTH)
 async def handle_invalid_otp_code(message: Message, state: FSMContext):
@@ -137,6 +162,11 @@ async def handle_otp_code(message: Message, state: FSMContext):
     }
 
     if 'detail' in response:
+        await state.update_data(wrong_otp_count=(await state.get_data()).get('wrong_otp_count', 0) + 1)
+        if (await state.get_data()).get('wrong_otp_count', 0) >= 3:
+            await message.answer('Вы превысили лимит попыток ввода кода. Запросите новый код через 5 минут.', reply_markup=kb.not_received_otp_code_reply_mu)
+            await state.set_state(RegistrationState.request_otp_code)
+            return
         state_target, error_msg, reply_markup = error_messages.get(response['detail'], (RegistrationState.phone, 'Ошибка при верификации кода'))
         await message.reply(error_msg, reply_markup=reply_markup)
         await state.set_state(state_target)
@@ -146,11 +176,8 @@ async def handle_otp_code(message: Message, state: FSMContext):
     if response.get('message') == 'OTP verified successfully':
         try:
             user = crud.create_user(db, phone=phone, name=data.get('name'), city=data.get('city'))
-            print('do set')
             crud.set_user_id_for_tg_user(db, message.from_user.id, user.id)
-            print('do session')
             crud.create_session(db, user_id=user.id)
-            print('do rec')
             sheets.record_add_user(user)
             
         except Exception as e:

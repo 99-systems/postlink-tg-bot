@@ -31,6 +31,8 @@ class TelegramUser(Base):
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="telegram_user", uselist=False)
+    support_requests = relationship("SupportRequest", back_populates="telegram_user", cascade="all, delete-orphan")
+
 
 class AccessUser(Base):
     __tablename__ = "access_users"

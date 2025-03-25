@@ -104,6 +104,7 @@ async def to_city(message: Message, state: FSMContext):
 async def date_choose(message: Message, state: FSMContext):
     await state.set_state(DeliverParcelState.date_choose)
     await state.update_data(start_date=None, end_date=None)
+    await message.answer(message.chat.id, text='Выберите пожалуйста', reply_markup=ReplyKeyboardRemove())
     await message.answer('Укажите, в какие числа Вам желательно взять заказ (посылку) у клиента (отправителя).\n<i>Чем шире охват дат, которые Вы укажете, тем больше шанс найти подходящего отправителя</i>', parse_mode='HTML', reply_markup=await DialogCalendar().start_calendar())
     
 

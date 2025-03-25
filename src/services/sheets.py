@@ -64,7 +64,7 @@ def record_close_deliver_req(req_id: int):
         worksheet = table.worksheet('Deliver requests')
         cell = worksheet.find(str(req_id))
         row_number = cell.row 
-        worksheet.update_cell(row_number, 7, "closed")
+        worksheet.update_cell(row_number, 8, "closed")
     except Exception as e:
         print("record_error: " + str(e))
 
