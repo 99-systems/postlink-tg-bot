@@ -24,14 +24,14 @@ async def start(message: Message, state: FSMContext):
         await handle_start(message, state)
     else:
         await message.answer('''
-Важно знать!
+<b>Важно знать!</b>
 
 ❗ PostLink не участвует в доставке и не проверяет содержимое посылок.
 Мы только находим и связываем нужные контакты за небольшую плату.
 Вся ответственность за передачу и безопасность сделки лежит на самих пользователях.
 
 ‼️Перед началом работы ознакомьтесь с Пользовательским соглашением:
-''')    
+''', parse_mode='HTML')    
         await state.set_state(AppState.terms)
         await send_terms(message, state)
         
