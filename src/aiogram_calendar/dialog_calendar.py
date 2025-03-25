@@ -68,6 +68,7 @@ class DialogCalendar(GenericCalendar):
         def format_day_string():
             date_to_check = datetime(current_year, month, day)
             
+            # Check if date is in allowed range
             if self.min_date and date_to_check < self.min_date:
                 return superscript(str(day))
             elif self.max_date and date_to_check > self.max_date:

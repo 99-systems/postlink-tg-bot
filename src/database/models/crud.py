@@ -56,6 +56,9 @@ def is_user_phone_exists(db: Session, phone: int) -> bool:
 def get_user_by_phone(db: Session, phone: int) -> User:
     return db.query(User).filter(User.phone == phone).first()
 
+def get_user_by_id(db: Session, user_id: int) -> User:
+    return db.query(User).filter(User.id == user_id).first()
+
 def add_user_telegram(db: Session, user_id: int, tg_id: int, username: str = None):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -121,38 +124,60 @@ def create_send_request(db: Session, tg_id: int, from_location: str, to_location
 
     return new_request
 
-def create_delivery_request(db: Session, tg_id: int, from_location: str, to_location: str, delivery_date: str, size_type: str) -> DeliveryRequest:
-    delivery_date = datetime.strptime(delivery_date.strip(), "%d.%m.%Y")
+def create_delivery_request(db: Session, tg_id: int, from_location: str, to_location: str, from_date: str | datetime, to_date: str | datetime, size_type: str) -> Optional[DeliveryRequest]:
+
+    if isinstance(from_date, str):
+        from_date = datetime.strptime(from_date.strip(), "%d.%m.%Y")
+    if isinstance(to_date, str):
+        to_date = datetime.strptime(to_date.strip(), "%d.%m.%Y")
+
+    user = get_user_by_tg_id(db, tg_id)
+    if not user:
+        return None
+
     new_request = DeliveryRequest(
         from_location=from_location,
         to_location=to_location,
-        user_id=get_user_by_tg_id(db, tg_id).id,
-        delivery_date=delivery_date,
+        user_id=user.id,
+        from_date=from_date,
+        to_date=to_date,
         size_type=size_type
     )
+
     db.add(new_request)
     db.commit()
     db.refresh(new_request)
-
     return new_request
 
 def get_matched_requests_for_send(db: Session, send_req: SendRequest) -> list[DeliveryRequest]:
     return db.query(DeliveryRequest).filter(
         DeliveryRequest.from_location == send_req.from_location,
-        DeliveryRequest.to_location == send_req.to_location,
-        and_(send_req.from_date <= DeliveryRequest.delivery_date, 
-             DeliveryRequest.delivery_date <= send_req.to_date),
-        or_(DeliveryRequest.size_type == send_req.size_type, DeliveryRequest.size_type == 'Не указаны'),
+        or_(DeliveryRequest.to_location == send_req.to_location, DeliveryRequest.to_location == '*'),
+        and_(
+            DeliveryRequest.from_date <= send_req.to_date,
+            DeliveryRequest.to_date >= send_req.from_date
+        ),
+        or_(
+            DeliveryRequest.size_type == send_req.size_type, 
+            DeliveryRequest.size_type == 'Не указаны', 
+            send_req.size_type == 'Не указаны'
+        ),
         DeliveryRequest.status == 'open'
     ).all()
 
 def get_matched_requests_for_delivery(db: Session, delivery_req: DeliveryRequest) -> list[SendRequest]:
     return db.query(SendRequest).filter(
         SendRequest.from_location == delivery_req.from_location,
-        SendRequest.to_location == delivery_req.to_location,
-        and_(SendRequest.from_date <= delivery_req.delivery_date, 
-             delivery_req.delivery_date <= SendRequest.to_date),
-        or_(SendRequest.size_type == delivery_req.size_type, delivery_req.size_type == 'Не указаны'),
+        or_(SendRequest.to_location == delivery_req.to_location, delivery_req.to_location == '*'),
+        and_(
+            SendRequest.from_date <= delivery_req.to_date,
+            SendRequest.to_date >= delivery_req.from_date
+        ),
+        or_(
+            SendRequest.size_type == delivery_req.size_type, 
+            SendRequest.size_type == 'Не указаны', 
+            delivery_req.size_type == 'Не указаны'
+        ),
         SendRequest.status == 'open'
     ).all()
 

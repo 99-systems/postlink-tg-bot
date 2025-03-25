@@ -5,8 +5,8 @@ from aiogram import Router, F
 from aiogram.filters import Command, or_f
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
 
-from src.services import request_reminder, sheets
 import src.services.matcher as matcher
+from src.services import request_reminder, sheets
 from src.common.states import AppState, SendParcelState
 from src.common import keyboard as kb
 from src.database.models import crud
@@ -60,7 +60,7 @@ async def from_city(message: Message, state: FSMContext):
 async def from_city_retry(message: Message, state: FSMContext):
     await state.set_state(SendParcelState.from_city)
     curr_city = crud.get_city_by_tg_id(db, message.from_user.id)
-    await message.answer('Прошу прощения, я не правильно Вас понял!', reply_markup=kb.request_location_and_back_reply_mu)
+    await message.answer('Прошу прощения, наверное, я не правильно Вас понял!', reply_markup=kb.request_location_and_back_reply_mu)
     await message.answer('Пожалуйста, отправьте название Вашего города еще раз. Убедитесь, что Вы не допустили ошибок.', reply_markup=kb.create_from_curr_city_mu(curr_city))
 
 
@@ -93,17 +93,15 @@ async def to_city_confirmation(message: Message, state: FSMContext):
 
 @router.message(SendParcelState.to_city_confirmation, F.text.lower() == 'неверный адрес')
 async def to_city_retry(message: Message, state: FSMContext):
+    await message.answer('Прошу прощения, наверное, я не правильно Вас понял! Пожалуйста, отправьте название города еще раз. Убедитесь, что Вы не допустили ошибок.', reply_markup=ReplyKeyboardRemove())
     await state.set_state(SendParcelState.to_city)
-    await message.answer('<b>Куда</b> Вы хотите отправить посылку? (Страна, город)', reply_markup=kb.request_location_and_back_reply_mu, parse_mode='HTML')
-
 
 @router.message(SendParcelState.to_city_confirmation, F.text.lower() == 'да')
 async def date_choose(message: Message, state: FSMContext):
     await state.set_state(SendParcelState.date_choose)
     await state.update_data(start_date=None, end_date=None)
-    await message.answer('Давайте согласуем удобные даты для передачи посылки курьеру!\nСначала выберите первый день, когда вам удобно передать посылку.\nЗатем укажите последний день, когда передача еще возможна.', reply_markup=ReplyKeyboardRemove())
-    await message.answer('Можно выбрать дату в календаре', reply_markup=await DialogCalendar().start_calendar())
-
+    await message.answer('Укажите, в какие числа Вам удобно передать посылку курьеру.\n<i>Чем шире охват дат, которые Вы укажете, тем больше шанс найти подходящего курьера</i>', parse_mode='HTML', reply_markup=await DialogCalendar().start_calendar())
+    
 
 @router.callback_query(SendParcelState.date_choose, DialogCalendarCallback.filter())
 async def process_calendar(callback_query: CallbackQuery, callback_data: DialogCalendarCallback, state: FSMContext):
@@ -122,8 +120,8 @@ async def process_calendar(callback_query: CallbackQuery, callback_data: DialogC
             end_calendar = DialogCalendar()
             end_calendar.set_dates_range(min_date=date, max_date=max_date)
             await callback_query.message.answer(
-                f'Вы выбрали {date.strftime("%d.%m.%Y")} как начальную дату. '
-                f'Теперь выберите последний день, когда передача еще возможна.',
+                f'Вы выбрали {date.strftime("%d.%m.%Y")} как <b>начальную</b> дату. '
+                f'Теперь выберите <b>крайний</b> день, когда встреча с курьером еще возможна.', parse_mode='HTML',
                 reply_markup=await end_calendar.start_calendar()
             )
         else:
@@ -139,7 +137,7 @@ async def process_calendar(callback_query: CallbackQuery, callback_data: DialogC
             await state.update_data(end_date=date)
             await state.set_state(SendParcelState.date_confirmation)
             await callback_query.message.answer(
-                f"Вы выбрали период с {start_date.strftime('%d.%m.%Y')} по {date.strftime('%d.%m.%Y')}.",
+                f"В период с {start_date.strftime('%d.%m.%Y')} по {date.strftime('%d.%m.%Y')} Вам удобно передать посылку курьеру.",
                 reply_markup=ReplyKeyboardMarkup(
                     keyboard=[[KeyboardButton(text='Да'), KeyboardButton(text='Я хочу изменить даты')]],
                     resize_keyboard=True,
@@ -156,6 +154,7 @@ async def process_calendar(callback_query: CallbackQuery, callback_data: DialogC
 
 @router.message(SendParcelState.date_confirmation, F.text.lower() == 'да')
 async def size_choose(message: Message, state: FSMContext):
+    await message.answer('Выберите пожалуйтса', reply_markup=ReplyKeyboardRemove())
     await message.answer('Какой вес и габариты посылки?', reply_markup=kb.sizes_kb)
     await state.set_state(SendParcelState.size_confirmation)
     
@@ -219,7 +218,7 @@ async def show_request_details(message: Message, state: FSMContext):
         sheets.record_add_send_req(send_req)
         await request_reminder.send_request(send_req)
         await message.answer(
-            f'Поздравляю! Я открыл для Вас заявку на поиск курьера. Я сообщу, как только по Вашей заявке найдется доставщик!\n\n{details_message}', 
+            f'🎉Поздравляю! Я открыл для Вас заявку на поиск курьера. Я сообщу, как только по Вашей заявке найдется доставщик!🙌🏻\n\n{details_message}', 
             reply_markup=kb.main_menu_open_req_reply_mu
         )
         await state.set_state(AppState.menu)

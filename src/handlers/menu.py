@@ -45,7 +45,7 @@ async def security_info(message: Message, state: FSMContext):
 async def handle_support(message: Message, state: FSMContext):
     
     await message.answer('Привет! Это служба поддержки PostLink.\nПожалуйста, ответьте на несколько вопросов, и мы сделаем все, что в наших силах!', reply_markup=ReplyKeyboardRemove())
-    await message.answer('Выберите, кто Вы⬇️', reply_markup=kb.user_type_reply_mu)
+    await message.answer('Выберите, кто Вы сейчас⬇️', reply_markup=kb.user_type_reply_mu)
     await state.set_state(SupportState.user_type)
     
 @router.message(or_f(F.text.lower() == 'выход', Command('exit')), AppState.menu)

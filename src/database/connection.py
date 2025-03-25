@@ -23,5 +23,6 @@ def init_db():
     from .models.user import User, TelegramUser 
     from .models.request import SendRequest, DeliveryRequest
     from .models.support_req import SupportRequest
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 

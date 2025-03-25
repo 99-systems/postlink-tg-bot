@@ -37,7 +37,7 @@ async def handle_phone_number(message: Message, state: FSMContext):
     
     response = await context.otp_service.send_otp(user_phone, OTP_CODE_LENGTH)
     if 'message' in response:
-        await message.reply(f'Я выслал Вам код подтверждения на WhatsApp по номеру {user_phone}. Прошу отправить мне полученный 4-х значный код.', reply_markup=ReplyKeyboardRemove())
+        await message.reply(f'Я выслал Вам код подтверждения на WhatsApp по номеру {user_phone}. Прошу отправить мне полученный 4-х значный код.', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Код не был отправлен')]], resize_keyboard=True))
         await state.update_data(phone=user_phone)
         await state.set_state(LoginState.otp_code)
     else:
@@ -63,14 +63,19 @@ async def handle_request_otp_code(message: Message, state: FSMContext):
         await message.reply('Попробуйте еще раз')
         await state.set_state(LoginState.phone)
         return
+
+@router.message(LoginState.otp_code, F.text.lower() == 'код не был отправлен')
+async def handle_code_not_sent(message: Message, state: FSMContext):
+    await message.answer('Давайте попробуем еще раз', reply_markup=ReplyKeyboardRemove())
+    await handle_login(message, state)
     
     
-@router.message(LoginState.otp_code, F.text.len() != OTP_CODE_LENGTH)
+@router.message(LoginState.otp_code, F.text.func(str.isdigit), F.text.len() != OTP_CODE_LENGTH)
 async def handle_invalid_otp_code(message: Message, state: FSMContext):
     await message.reply('Это не похоже на 4-х значный код, попробуйте еще раз')
     await state.set_state(LoginState.otp_code)
 
-@router.message(LoginState.otp_code, F.text.len() == OTP_CODE_LENGTH, F.text.func(str.isdigit))
+@router.message(LoginState.otp_code, F.text.func(str.isdigit), F.text.len() == OTP_CODE_LENGTH, )
 async def handle_otp_code(message: Message, state: FSMContext):
     data = await state.get_data()
     phone = data.get('phone')

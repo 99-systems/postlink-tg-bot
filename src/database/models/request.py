@@ -34,7 +34,8 @@ class DeliveryRequest(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     user = relationship("User", back_populates="delivery_requests")
 
-    delivery_date = Column(DateTime, nullable=False) 
+    from_date = Column(DateTime, nullable=False)  
+    to_date = Column(DateTime, nullable=False)
     size_type = Column(String, nullable=True)
     # description = Column(String, nullable=True)
 
