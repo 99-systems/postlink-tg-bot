@@ -46,7 +46,7 @@ class CalendarLabels(BaseModel):
     months: List[str] = [
         "Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"
     ]
-    today_caption: str = Field(default='Сегодня', description='Caprion for Today button')
+    today_caption: str = Field(default='Сегодня', description='Текст для кнопки "Сегодня"')
 
 
 HIGHLIGHT_FORMAT = "[{}]"

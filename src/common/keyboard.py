@@ -4,13 +4,16 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from src.handlers.support import support_problems
 
+not_received_otp_code_kb = [[KeyboardButton(text='Код не был отправлен')]]
+not_received_otp_code_reply_mu = ReplyKeyboardMarkup(keyboard=not_received_otp_code_kb, resize_keyboard=True)
+
 send_otp_code_kb = [[KeyboardButton(text='Отправить код')]]
 send_otp_code_reply_mu = ReplyKeyboardMarkup(keyboard=send_otp_code_kb, resize_keyboard=True)
 
 confirmation_kb = [[KeyboardButton(text='Да'), KeyboardButton(text='Нет')]]
 confirmation_reply_mu = ReplyKeyboardMarkup(keyboard=confirmation_kb, resize_keyboard=True)
 
-user_type_kb = [[KeyboardButton(text='Отправитель'), KeyboardButton(text='Курьер')]]
+user_type_kb = [[KeyboardButton(text='Отправитель'), KeyboardButton(text='Курьер'), KeyboardButton(text='Новый пользователь')]]
 user_type_reply_mu = ReplyKeyboardMarkup(keyboard=user_type_kb, resize_keyboard=True)
 
 auth_kb = [[KeyboardButton(text='Регистрация')], [KeyboardButton(text='Авторизация')]]
@@ -74,10 +77,10 @@ def create_from_curr_city_mu(city: str):
 
 
 sizes_kb_builder  = InlineKeyboardBuilder()
-sizes_kb_builder.row(InlineKeyboardButton(text='Маленькая – до 1 кг, до 20 см по каждой стороне', callback_data=f'size:small'))
-sizes_kb_builder.row(InlineKeyboardButton(text='Средняя – до 5 кг, до 35 см по каждой стороне', callback_data=f'size:medium'))
-sizes_kb_builder.row(InlineKeyboardButton(text='Большая – до 10 кг, до 50 см по каждой стороне', callback_data=f'size:large'))
-sizes_kb_builder.row(InlineKeyboardButton(text='Крупногабаритная – более 10 кг, более 50 см по одной из сторон', callback_data=f'size:extra_large'))
+sizes_kb_builder.row(InlineKeyboardButton(text='Маленькая – до 2 кг, до 30 см по каждой стороне', callback_data=f'size:small'))
+sizes_kb_builder.row(InlineKeyboardButton(text='Средняя – до 15 кг, до 60 см по каждой стороне', callback_data=f'size:medium'))
+sizes_kb_builder.row(InlineKeyboardButton(text='Большая – до 30 кг, до 100 см по каждой стороне', callback_data=f'size:large'))
+sizes_kb_builder.row(InlineKeyboardButton(text='Крупногабаритная – более 30 кг, более 100 см по одной из сторон', callback_data=f'size:extra_large'))
 sizes_kb = sizes_kb_builder.as_markup()
 
 sizes_kb_builder.row(InlineKeyboardButton(text='Любую из вышеперечисленных', callback_data=f'size:skip'))
@@ -86,11 +89,63 @@ sizes_kb_del = sizes_kb_builder.as_markup()
 no_desc = [[KeyboardButton(text='Пропустить')]]
 no_desc_kb = ReplyKeyboardMarkup(keyboard=no_desc, resize_keyboard=True)
 
-def create_send_req_buttons(send_req_id: int):
+
+from src.handlers.request.callbacks import RequestCallback, Action, User
+
+def create_accept_buttons_for_sender(send_req_id: int, delivery_req_id: int, sending_user_id: int, delivering_user_id: int):
     inl_builder = InlineKeyboardBuilder()
     inl_builder.row(
-        InlineKeyboardButton(text='Принять✅', callback_data=f'accept_req:{send_req_id}'),
-        InlineKeyboardButton(text='Отклонить❌', callback_data=f'reject_req:{send_req_id}')
+        InlineKeyboardButton(
+            text='Принять✅',
+            callback_data=RequestCallback(
+                user=User.sender,
+                action=Action.accept,
+                send_request_id=send_req_id,
+                delivery_request_id=delivery_req_id,
+                sending_user_id=sending_user_id,
+                delivering_user_id=delivering_user_id
+            ).pack()
+        ),
+        InlineKeyboardButton(
+            text='Отклонить❌',
+            callback_data=RequestCallback(
+                user=User.sender,
+                action=Action.reject,
+                send_request_id=send_req_id,
+                delivery_request_id=delivery_req_id,
+                sending_user_id=sending_user_id,
+                delivering_user_id=delivering_user_id
+            ).pack()
+        )
+    )
+    return inl_builder.as_markup()
+
+
+def create_accept_buttons_for_delivery(send_req_id: int, delivery_req_id: int, sending_user_id: int, delivering_user_id: int):
+    inl_builder = InlineKeyboardBuilder()
+    inl_builder.row(
+        InlineKeyboardButton(
+            text='Принять✅',
+            callback_data=RequestCallback(
+                user=User.delivery,
+                action=Action.accept,
+                send_request_id=send_req_id,
+                delivery_request_id=delivery_req_id,
+                sending_user_id=sending_user_id,
+                delivering_user_id=delivering_user_id
+            ).pack()
+        ),
+        InlineKeyboardButton(
+            text='Отклонить❌',
+            callback_data=RequestCallback(
+                user=User.delivery,
+                action=Action.reject,
+                send_request_id=send_req_id,
+                delivery_request_id=delivery_req_id,
+                sending_user_id=sending_user_id,
+                delivering_user_id=delivering_user_id
+            ).pack()
+        )
     )
     return inl_builder.as_markup()
 

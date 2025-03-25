@@ -15,6 +15,13 @@ router = Router()
 @router.message(AppState.menu, Command('start'))
 @router.message(or_f(F.text.lower() == 'меню', Command('menu')))
 async def handle_menu(message: Message, state: FSMContext):
+    # Check if user authenticated
+    
+    if not crud.get_session_by_tg_id(db, message.from_user.id):
+        await message.answer('Авторизуйтесь пожалуйста, чтобы продолжить', reply_markup=kb.auth_reply_mu)
+        await state.set_state(AppState.auth)
+        return
+    
     await state.set_state(AppState.menu)
     reply_markup = (kb.main_menu_open_req_reply_mu 
                     if crud.is_open_request_by_tg_id(db, message.from_user.id) 
@@ -45,7 +52,7 @@ async def security_info(message: Message, state: FSMContext):
 async def handle_support(message: Message, state: FSMContext):
     
     await message.answer('Привет! Это служба поддержки PostLink.\nПожалуйста, ответьте на несколько вопросов, и мы сделаем все, что в наших силах!', reply_markup=ReplyKeyboardRemove())
-    await message.answer('Выберите, кто Вы⬇️', reply_markup=kb.user_type_reply_mu)
+    await message.answer('Выберите, кто Вы сейчас⬇️', reply_markup=kb.user_type_reply_mu)
     await state.set_state(SupportState.user_type)
     
 @router.message(or_f(F.text.lower() == 'выход', Command('exit')), AppState.menu)

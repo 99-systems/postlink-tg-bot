@@ -1,6 +1,9 @@
+from datetime import datetime
+
+
 from aiogram.fsm.context import FSMContext
 from aiogram import Router, F
-from aiogram.types import ReplyKeyboardRemove
+from aiogram.types import ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.filters import Command, or_f
 from aiogram.types import Message, CallbackQuery
 
@@ -8,13 +11,12 @@ from aiogram.types import Message, CallbackQuery
 import src.services.matcher as matcher
 from src.services import sheets
 from src.services import request_reminder
-
 from src.common.states import AppState, DeliverParcelState
 from src.common import keyboard as kb
 from src.database.models import crud
 from src.database import db
 from src.utils import get_place
-from src.aiogram_calendar import DialogCalendar, DialogCalendarCallback, get_user_locale
+from src.aiogram_calendar import DialogCalendar, DialogCalendarCallback
 from src.handlers import menu
 
 
@@ -72,7 +74,13 @@ async def deliver_parcel(message: Message, state: FSMContext, user = None):
     if user is None:
         user = message.from_user
     await state.set_state(DeliverParcelState.to_city)
-    await message.answer('<b>Куда</b> Вы готовы доставить заказ (посылку)? (Страна, город)', reply_markup=kb.request_location_and_back_reply_mu, parse_mode='HTML')
+    await message.answer('<b>Куда</b> Вы готовы доставить заказ (посылку)?\n(Страна, город)', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Любой пункт назначения')], [KeyboardButton(text='Назад')]], resize_keyboard=True), parse_mode='HTML')
+
+@router.message(DeliverParcelState.to_city, F.text.lower() == 'любой пункт назначения')
+async def to_any_city(message: Message, state: FSMContext):
+    await message.answer('Выбирая опцию "Любой пункт назначения", Вы подтверждаете, что из города, где вы находитесь (Указали в предыдущем вопросе), Вы готовы взять заказ (Посылку) и доставить его в любой пункт назначения (Любой город, страну)', reply_markup=ReplyKeyboardRemove())
+    await state.update_data(to_city='*')
+    await date_choose(message, state)
 
 @router.message(DeliverParcelState.to_city, F.text.lower() == 'назад')
 async def back_to_from_city(message: Message, state: FSMContext):
@@ -95,34 +103,71 @@ async def to_city(message: Message, state: FSMContext):
 @router.message(DeliverParcelState.to_city_confirmation, F.text.lower() == 'да')
 async def date_choose(message: Message, state: FSMContext):
     await state.set_state(DeliverParcelState.date_choose)
-    await message.answer('Какого числа Вы отправляетесь в пункт назначения?', reply_markup=ReplyKeyboardRemove())
-    await message.answer('Выберите пожалуйста, ниже на календаре', reply_markup=await DialogCalendar().start_calendar())
+    await state.update_data(start_date=None, end_date=None)
+    await message.answer(message.chat.id, text='Выберите пожалуйста', reply_markup=ReplyKeyboardRemove())
+    await message.answer('Укажите, в какие числа Вам желательно взять заказ (посылку) у клиента (отправителя).\n<i>Чем шире охват дат, которые Вы укажете, тем больше шанс найти подходящего отправителя</i>', parse_mode='HTML', reply_markup=await DialogCalendar().start_calendar())
     
 
 @router.callback_query(DeliverParcelState.date_choose, DialogCalendarCallback.filter())
-async def date_confirmation(callback_query: CallbackQuery, callback_data: DialogCalendarCallback, state: FSMContext):
-    # Create the calendar instance with user's locale
-    calendar = DialogCalendar()
-    
-    # Process the selection
-    selected, date = await calendar.process_selection(callback_query, callback_data)
-    
-    if selected:
-        deliver_date = date.strftime("%d.%m.%Y")
-        await state.update_data(deliver_date=deliver_date)
-        await state.set_state(DeliverParcelState.date_confirmation)
+async def process_calendar(callback_query: CallbackQuery, callback_data: DialogCalendarCallback, state: FSMContext):
+    try:
+        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        max_date = datetime(today.year + 1, today.month, today.day)
+        calendar = DialogCalendar()
+        calendar.set_dates_range(min_date=today, max_date=max_date)
+        selected, date = await calendar.process_selection(callback_query, callback_data)
+        if not selected:
+            return
+        
+        state_data = await state.get_data()
+        if "start_date" not in state_data or not isinstance(state_data["start_date"], datetime):
+            await state.update_data(start_date=date)
+            end_calendar = DialogCalendar()
+            end_calendar.set_dates_range(min_date=date, max_date=max_date)
+            await callback_query.message.answer(
+                f'Вы выбрали {date.strftime("%d.%m.%Y")} как <b>начальную</b> дату. '
+                f'Теперь выберите <b>крайний</b> день, когда встреча с отправительем еще возможна.', parse_mode='HTML',
+                reply_markup=await end_calendar.start_calendar()
+            )
+        else:
+            start_date = state_data["start_date"]
+            # Validate that end date is after start date
+            if date < start_date:
+                await callback_query.message.answer(
+                    "Конечная дата должна быть после начальной даты. Пожалуйста, выберите другую дату.",
+                    reply_markup=await DialogCalendar().start_calendar()
+                )
+                return
+                
+            await state.update_data(end_date=date)
+            await state.set_state(DeliverParcelState.date_confirmation)
+            await callback_query.message.answer(
+                f"Вы хотите взять посылку у отправителя с {start_date.strftime('%d.%m.%Y')} по {date.strftime('%d.%m.%Y')}.",
+                reply_markup=ReplyKeyboardMarkup(
+                    keyboard=[[KeyboardButton(text='Да'), KeyboardButton(text='Я хочу изменить даты')]],
+                    resize_keyboard=True,
+                    one_time_keyboard=True
+                )
+            )
+    except Exception as e:
+        print(f"Calendar error: {e}")
         await callback_query.message.answer(
-            f'Вы отправляетесь в {deliver_date} числа?', reply_markup=kb.city_conf_reply_mu
+            "Произошла ошибка при обработке выбора даты. Пожалуйста, попробуйте снова.",
+            reply_markup=await DialogCalendar().start_calendar()
         )
         
 @router.message(DeliverParcelState.date_choose)
 async def date_choose_retry(message: Message, state: FSMContext):
     await message.answer('Пожалуйста, выберайте по календарю')
+    
+@router.message(DeliverParcelState.date_confirmation, F.text.lower() == 'я хочу изменить даты')
+async def date_retry(message: Message, state: FSMContext):
+    await date_choose(message, state)
 
 @router.message(DeliverParcelState.date_confirmation, F.text.lower() == 'да')
 async def size_choose(message: Message, state: FSMContext):
     await message.answer('Выберите пожалуйтса', reply_markup=ReplyKeyboardRemove())
-    await message.answer('Какие ограничения по весу или обьему посылки?', reply_markup=kb.sizes_kb_del)
+    await message.answer('Какую посылку Вы хотите взять?', reply_markup=kb.sizes_kb_del)
     await state.set_state(DeliverParcelState.size_choose)
 
 
@@ -150,10 +195,11 @@ async def show_request_details(message: Message, state: FSMContext, user = None)
     data = await state.get_data()
     from_city = data.get('from_city', 'Не указано')
     to_city = data.get('to_city', 'Не указано')
-    deliver_date = data.get('deliver_date', 'Не указана')
+    start_date = data.get('start_date', None)
+    end_date = data.get('end_date', None)
     size_choose = data.get('size_choose', 'Не указаны')
 
-    delivery_req = crud.create_delivery_request(db, user.id, from_city, to_city, deliver_date, size_choose)
+    delivery_req = crud.create_delivery_request(db, user.id, from_city, to_city, start_date, end_date, size_choose)
 
     details_message = (
         f"Детали заявки:\n"
@@ -161,13 +207,13 @@ async def show_request_details(message: Message, state: FSMContext, user = None)
         f"Номер заявки: {delivery_req.id}.\n"
         f"Город отправления: {from_city}\n"
         f"Город назначения: {to_city}\n"
-        f"Дата отправления: {deliver_date}\n"
+        f"Дата отправления: с {start_date} по {end_date}\n"
         f"Вес и габариты: {size_choose}\n"
     )
-    
+    # TODO: FIX sheets, request_reminder
     sheets.record_add_deliver_req(delivery_req)
     await request_reminder.send_request(delivery_req)
-    await message.answer(f'Поздравляю! Я открыл для Вас заявку на поиск заказа. Я сообщу, как только по Вашей заявке найдется посылка!\n{details_message}', reply_markup=kb.main_menu_open_req_reply_mu)
+    await message.answer(f'🎉Поздравляю! Я открыл для Вас заявку на поиск заказа. Я сообщу, как только по Вашей заявке найдется посылка!🙌🏻\n{details_message}', reply_markup=kb.main_menu_open_req_reply_mu)
     await state.set_state(AppState.menu)
 
     await matcher.match_delivery_request(delivery_req)

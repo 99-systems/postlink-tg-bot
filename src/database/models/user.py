@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, BigInteger
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from src.database.connection import Base
@@ -24,13 +24,15 @@ class TelegramUser(Base):
     __tablename__ = "telegram_users" 
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    telegram = Column(Integer, unique=True, nullable=False, index=True)
+    telegram = Column(BigInteger, unique=True, nullable=False, index=True)
     username = Column(String, nullable=True)
     accepted_terms = Column(Boolean, default=False)
 
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="telegram_user", uselist=False)
+    support_requests = relationship("SupportRequest", back_populates="telegram_user", cascade="all, delete-orphan")
+
 
 class AccessUser(Base):
     __tablename__ = "access_users"
