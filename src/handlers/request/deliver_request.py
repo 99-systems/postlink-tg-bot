@@ -213,7 +213,51 @@ async def show_request_details(message: Message, state: FSMContext, user = None)
     # TODO: FIX sheets, request_reminder
     sheets.record_add_deliver_req(delivery_req)
     await request_reminder.send_request(delivery_req)
+    await state.set_data(request_created_count=(await state.get_data().get('request_created_count', 0)) + 1)
     await message.answer(f'🎉Поздравляю! Я открыл для Вас заявку на поиск заказа. Я сообщу, как только по Вашей заявке найдется посылка!🙌🏻\n{details_message}', reply_markup=kb.main_menu_open_req_reply_mu)
-    await state.set_state(AppState.menu)
+    await state.set_data(delivery_req_id=delivery_req.id)
 
+    if (await state.get_data().get('request_created_count', 0) < 2):
+        await handle_offer_another_delivery_request(message, state)
+    else:
+        handle_no_another_delivery_request(message, state)
+    
+    
+async def handle_offer_another_delivery_request(message: Message, state: FSMContext):
+    await state.set_state(DeliverParcelState.another_delivery_request)
+    await message.answer('Хотите взять еще одну посылку?', reply_markup=kb.confirmation_reply_mu)
+    
+@router.message(DeliverParcelState.another_delivery_request, F.text.lower() == 'да')
+async def handle_another_delivery_request(message: Message, state: FSMContext):
+    
+    delivery_req_id = await state.get_data('delivery_req_id')
+    delivery_req = crud.get_delivery_request_by_id(db, delivery_req_id)
+    
+    await state.set_state(DeliverParcelState.another_delivery_request_confirmation)
+    await message.answer(f'Отлично! Создаем еще одну заявку на поиск заказа (посылки). Вы хотите найти заказ по такому же маршруту?\n{delivery_req.from_date} - {delivery_req.to_date}\n{delivery_req.from_location} - {delivery_req.to_location}', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Да')], [KeyboardButton(text='Хочу указать другой маршрут')], [KeyboardButton(text='Отмена')]], resize_keyboard=True))
+
+@router.message(DeliverParcelState.another_delivery_request, F.text.lower() == 'нет')
+async def handle_no_another_delivery_request(message: Message, state: FSMContext):
+    delivery_req_id = await state.get_data('delivery_req_id')
+    delivery_req = crud.get_delivery_request_by_id(db, delivery_req_id)
     await matcher.match_delivery_request(delivery_req)
+    await menu.handle_menu(message, state)
+    
+
+@router.message(DeliverParcelState.another_delivery_request)
+async def handle_no_match_another_delivery_request(message: Message, state: FSMContext):
+    await message.answer('Пожалуйста, выберите один из вариантов', reply_markup=kb.confirmation_reply_mu)
+    
+
+@router.message(DeliverParcelState.another_delivery_request_confirmation, F.text.lower() == 'отмена')
+async def handle_cancel_another_delivery_request(message: Message, state: FSMContext):
+    await handle_no_another_delivery_request(message, state)
+    
+@router.message(DeliverParcelState.another_delivery_request_confirmation, F.text.lower() == 'хочу указать другой маршрут')
+async def handle_change_route_another_delivery_request(message: Message, state: FSMContext):
+    await message.answer('К сожалению, несколько одновременных заявок можно открыть только по одинаковым маршрутам. Если Вы хотите открыть заявку по новому маршруту, то необходимо завершить текущую заявку и после открыть новую.', reply_markup=ReplyKeyboardRemove())
+    await handle_no_another_delivery_request(message, state)
+    
+@router.message(DeliverParcelState.another_delivery_request_confirmation, F.text.lower() == 'да')
+async def handle_another_delivery_request_confirmation(message: Message, state: FSMContext):
+    await size_choose(message, state)
