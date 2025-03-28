@@ -1,6 +1,6 @@
 from aiogram.fsm.context import FSMContext
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 
 from src.common import keyboard as kb
 from src.database.models import crud
@@ -9,17 +9,22 @@ from src.database import db
 
 from src.services import sheets
 from src.bot import bot
+from src.handlers import menu
+
 
 router = Router()
 
 
 @router.message(F.text.lower() == "статус заявки")
+@router.message(F.text.lower() == "статус заявок")
 async def request_status(message: Message, state: FSMContext):
     requests = crud.get_request_by_tg_id(db, message.from_user.id)
     
     if not requests:
         await message.answer("У вас нет активных заявок.")
         return
+    
+    sent_message_ids = []
     
     for request in requests:
         send = isinstance(request, SendRequest)
@@ -33,7 +38,11 @@ async def request_status(message: Message, state: FSMContext):
         to_date = request.to_date.strftime('%d.%m.%Y')
         text += f"\nДата: {from_date} - {to_date}\nТип груза: {request.size_type}"
 
-        await message.answer(text, reply_markup=kb.create_close_req_button('send' if send else 'delivery', request.id), parse_mode='HTML')
+        sent_message = await message.answer(text, reply_markup=kb.create_close_req_button('send' if send else 'delivery', request.id), parse_mode='HTML')
+        
+        sent_message_ids.append(sent_message.message_id)
+
+    await state.update_data(sent_messages_for_close_req=sent_message_ids)
 
 
 @router.message(F.text.lower() == "отменить заявку")
@@ -149,4 +158,12 @@ async def close_request_kb(callback: CallbackQuery, state: FSMContext):
         return
     
     req_type_text = 'отправку' if req_type == 'send' else 'доставку'
-    await callback.message.answer(f'Заявка на {req_type_text} по номеру {req_id} закрыта.', reply_markup=kb.main_menu_reply_mu)
+    
+    
+    state_data = await state.get_data()
+    msgs_to_delete = state_data.get('sent_messages_for_close_req', [])
+    for msg_id in msgs_to_delete:    
+        await bot.delete_message(callback.from_user.id, msg_id)
+    
+    await callback.message.answer(f'Заявка на {req_type_text} по номеру {req_id} закрыта.')
+    await menu.handle_menu(callback.message, state)

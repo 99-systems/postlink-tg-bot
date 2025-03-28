@@ -1,8 +1,11 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
 
-from aiogram.utils.keyboard import InlineKeyboardBuilder 
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from src.handlers.support import support_problems
+from src.database.models import crud
+from src.database.models.request import DeliveryRequest, SendRequest
+from src.database import db
 
 not_received_otp_code_kb = [[KeyboardButton(text='Код не был отправлен')]]
 not_received_otp_code_reply_mu = ReplyKeyboardMarkup(keyboard=not_received_otp_code_kb, resize_keyboard=True)
@@ -41,6 +44,28 @@ request_location_and_back_reply_mu = ReplyKeyboardMarkup(keyboard=[request_locat
 
 phone_kb = [[KeyboardButton(text='Поделиться контактом с ботом', request_contact=True)]]
 phone_reply_mu = ReplyKeyboardMarkup(keyboard=phone_kb, resize_keyboard=True)
+
+
+def create_main_menu_markup(tg_id: str):
+    open_request = crud.get_open_request(db, tg_id=tg_id)
+    keyboard = []
+    if open_request is None:
+        keyboard.append([KeyboardButton(text='Хочу отправить посылку'), KeyboardButton(text='Хочу доставить посылку')])
+    else:
+        
+        if isinstance(open_request, SendRequest):
+            keyboard.append([KeyboardButton(text='Статус заявки'), KeyboardButton(text='Отменить заявку')])
+        if isinstance(open_request, DeliveryRequest):
+            delivery_requests = crud.get_all_open_delivery_requests_by_tg_id(db, tg_id)
+            if len(delivery_requests) == 1:
+                keyboard.append([KeyboardButton(text='Статус заявки'), KeyboardButton(text='Отменить заявку'), KeyboardButton(text='Создать еще одну заявку')])
+            else:
+                keyboard.append([KeyboardButton(text='Статус заявок'), KeyboardButton(text='Отменить заявку')])
+
+    keyboard.append([KeyboardButton(text='Безопасность Отправителей'), KeyboardButton(text='Безопасность Курьеров')])
+    keyboard.append([KeyboardButton(text='Служба поддержки')])
+    keyboard.append([KeyboardButton(text='Выход')])
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 main_menu_kb = [
     [KeyboardButton(text='Хочу отправить посылку'), KeyboardButton(text='Хочу доставить посылку')], 
