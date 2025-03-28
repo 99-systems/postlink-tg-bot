@@ -22,7 +22,7 @@ async def run():
     
     send_request_handler.router.message.middleware(OpenRequestMessageMiddleware()) #проверяет на наличие открытой заявки
     # send_request_handler.router.callback_query.middleware(OpenRequestCallbackMiddleware()) #проверяет на наличие открытой заявки
-    deliver_request_handler.router.message.middleware(OpenRequestMessageMiddleware()) #проверяет на наличие открытой заявки
+    # deliver_request_handler.router.message.middleware(OpenRequestMessageMiddleware()) #проверяет на наличие открытой заявки
     # deliver_request_handler.router.callback_query.middleware(OpenRequestCallbackMiddleware()) #проверяет на наличие открытой заявки
 
 

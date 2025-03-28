@@ -1,11 +1,11 @@
 from aiogram.fsm.context import FSMContext
 from aiogram import Router, F
 from aiogram.filters import Command, StateFilter
-from aiogram.types import Message, FSInputFile
+from aiogram.types import Message, FSInputFile, ReplyKeyboardRemove
 
 
 import src.database.models.crud as crud
-from src.common.states import AppState
+from src.common.states import AppState, SupportState
 from src.common import keyboard as kb
 from src.database import db
 
@@ -14,6 +14,9 @@ router = Router()
 
 @router.message(StateFilter(None, AppState.auth), Command("start"))
 async def start(message: Message, state: FSMContext):
+    
+    
+    await state.update_data(tg_user_id=message.from_user.id)
     
     tg_user = crud.get_tg_user(db, message.from_user.id)
     
@@ -71,3 +74,11 @@ async def no_match(message: Message, state: FSMContext):
         reply_markup = kb.open_terms_reply_mu
     
     await message.answer('Пожалуйста, воспользуйтесь кнопками.', reply_markup=reply_markup)
+    
+    
+@router.message(F.text.lower() == 'служба поддержки', AppState.menu)
+async def handle_support(message: Message, state: FSMContext):
+    
+    await message.answer('Привет! Это служба поддержки PostLink.\nПожалуйста, ответьте на несколько вопросов, и мы сделаем все, что в наших силах!', reply_markup=ReplyKeyboardRemove())
+    await message.answer('Выберите, кто Вы сейчас⬇️', reply_markup=kb.user_type_reply_mu)
+    await state.set_state(SupportState.user_type)

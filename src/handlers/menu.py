@@ -15,19 +15,12 @@ router = Router()
 @router.message(AppState.menu, Command('start'))
 @router.message(or_f(F.text.lower() == 'меню', Command('menu')))
 async def handle_menu(message: Message, state: FSMContext):
-    # Check if user authenticated
-    
-    if not crud.get_session_by_tg_id(db, message.from_user.id):
-        await message.answer('Авторизуйтесь пожалуйста, чтобы продолжить', reply_markup=kb.auth_reply_mu)
-        await state.set_state(AppState.auth)
-        return
-    
     await state.set_state(AppState.menu)
-    reply_markup = (kb.main_menu_open_req_reply_mu 
-                    if crud.is_open_request_by_tg_id(db, message.from_user.id) 
-                    else kb.main_menu_reply_mu)
+    state_data = await state.get_data()
+    tg_user_id = state_data.get('tg_user_id', message.from_user.id)
+    
+    await message.answer('Что вас интересует из перечисленного?', reply_markup=kb.create_main_menu_markup(tg_user_id))
 
-    await message.answer('Что вас интересует из перечисленного?', reply_markup=reply_markup)
 
 
 SECURITY_LINKS = {
@@ -48,12 +41,7 @@ async def security_info(message: Message, state: FSMContext):
         reply_markup=reply_markup, parse_mode='HTML'
     )
 
-@router.message(F.text.lower() == 'служба поддержки', AppState.menu)
-async def handle_support(message: Message, state: FSMContext):
-    
-    await message.answer('Привет! Это служба поддержки PostLink.\nПожалуйста, ответьте на несколько вопросов, и мы сделаем все, что в наших силах!', reply_markup=ReplyKeyboardRemove())
-    await message.answer('Выберите, кто Вы сейчас⬇️', reply_markup=kb.user_type_reply_mu)
-    await state.set_state(SupportState.user_type)
+
     
 @router.message(or_f(F.text.lower() == 'выход', Command('exit')), AppState.menu)
 async def exit(message: Message, state: FSMContext):
