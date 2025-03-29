@@ -203,11 +203,12 @@ async def show_request_details(message: Message, state: FSMContext, tg_user_id =
 
     details_message = (
         f"Детали заявки:\n"
-        f"Статус заявки: Открыта.\n"
-        f"Номер заявки: {delivery_req.id}.\n"
-        f"Город отправления: {from_city}\n"
-        f"Город назначения: {to_city}\n"
-        f"Дата отправления: с {start_date} по {end_date}\n"
+        "<b>Заявка на поиск заказа (Посылки)</b>\n"
+        f"📌Номер заявки: <b>{delivery_req.id}</b>.\n"
+        "🛎Статус: <b>Активна</b>.\n"
+        f"🛫Город отправления: <b>{from_city}</b>\n"
+        f"🛫Город назначения: <b>{to_city}</b>\n"
+        f"🗓Даты: <b>{start_date.strftime("%d.%m.%Y")} - {end_date.strftime("%d.%m.%Y")}</b>\n"
         f"Вес и габариты: {size_choose}\n"
     )
     # TODO: FIX sheets, request_reminder
