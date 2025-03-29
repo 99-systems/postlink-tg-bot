@@ -1,6 +1,6 @@
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command, or_f
-from aiogram.types import Message, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import Message, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton, FSInputFile
 from aiogram import F
 
 
@@ -23,8 +23,61 @@ from src.services import sheets
 @router.message(RegistrationState.city, F.text.lower() == 'назад')
 @router.message(AppState.auth, or_f(F.text.lower() == 'регистрация', Command('register')))   
 async def handle_registration(message: Message, state: FSMContext):
+    
+    
+    tg_user = crud.get_tg_user(db, message.from_user.id)  
+    
+    
+    if tg_user.accepted_terms:
+        await state.set_state(RegistrationState.name)
+        await message.reply('Как Вас зовут?', reply_markup=kb.back_reply_mu)
+    else:
+        await message.answer('''
+<b>Важно знать!</b>
+
+❗ PostLink не участвует в доставке и не проверяет содержимое посылок.
+Мы только находим и связываем нужные контакты за небольшую плату.
+Вся ответственность за передачу и безопасность сделки лежит на самих пользователях.
+
+‼️Перед началом работы ознакомьтесь с Пользовательским соглашением:
+''', parse_mode='HTML')    
+        await state.set_state(AppState.terms)
+        await send_terms(message, state)
+    
+
+@router.message(F.text.lower() == 'согласен', AppState.terms)
+async def accept_terms(message: Message, state: FSMContext):
+    crud.accept_terms(db, message.from_user.id)
+    
     await state.set_state(RegistrationState.name)
     await message.reply('Как Вас зовут?', reply_markup=kb.back_reply_mu)
+    
+@router.message(F.text.lower() == 'не согласен', AppState.terms)
+async def decline_terms(message: Message, state: FSMContext):
+    await state.set_state(AppState.terms_declined)
+    await message.answer('К сожалению, без согласия с пользовательским соглашением, использование PostLink невозможно.\nПрошу еще раз ознакомиться с пользовательским соглашением и нажать "Согласен" для дальнейшего взаимодействия.', reply_markup=kb.open_terms_reply_mu)
+
+
+@router.message(F.text.lower() == 'открыть пользовательское соглашение', AppState.terms_declined)
+async def send_terms(message: Message, state: FSMContext):
+    await state.set_state(AppState.terms)
+    await message.answer_document(document=FSInputFile('src/files/user_agreement.pdf', 'Пользовательское соглашение.pdf'), caption='✅ Нажимая «Согласен», ты подтверждаешь, что ознакомился с условиями использования сервиса.', reply_markup=kb.terms_reply_mu)
+    
+
+@router.message(AppState.terms)
+@router.message(AppState.terms_declined)
+async def no_match(message: Message, state: FSMContext):
+    
+    current_state = await state.get_state()
+    reply_markup = None
+    
+    if current_state == AppState.terms:
+        reply_markup = kb.terms_reply_mu
+    elif current_state == AppState.terms_declined:
+        reply_markup = kb.open_terms_reply_mu
+    
+    await message.answer('Пожалуйста, воспользуйтесь кнопками.', reply_markup=reply_markup)
+   
 
 
 @router.message(RegistrationState.name)
