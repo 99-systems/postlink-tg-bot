@@ -11,8 +11,9 @@ from src.database.models import crud
 from src.database import db
 
 
+from src.handlers import main
 from src.handlers.auth import router, OTP_CODE_LENGTH
-from src.handlers.auth.common import handle_success_auth, handle_back_start
+from src.handlers.auth.common import handle_success_auth
 from .filters import PhoneNumberFilter
 from .utils import format_phone_number
 
@@ -30,9 +31,8 @@ async def handle_phone_number(message: Message, state: FSMContext):
     
     user = crud.get_user_by_phone(db, user_phone)
     if not user:
-        await message.reply('Пользователь с таким номером телефона не найден, попробуйте зарегистрироваться')
-        await state.set_state({}) 
-        await handle_back_start(message, state)
+        await message.reply('Пользователь с таким номером телефона не найден, попробуйте зарегистрироваться', reply_markup=kb.auth_reply_mu)
+        await state.set_state(AppState.auth)
         return
     
     response = await context.otp_service.send_otp(user_phone, OTP_CODE_LENGTH)
@@ -130,7 +130,7 @@ async def handle_otp_code(message: Message, state: FSMContext):
             crud.create_session(db, user.id)
         except Exception as e:
             await message.reply('Ошибка при авторизации пользователя')
-            await handle_back_start(message, state)
+            await main.handle_start(message, state)
             return
         await handle_success_auth(message, state)
     else:

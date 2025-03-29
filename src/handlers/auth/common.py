@@ -15,8 +15,3 @@ async def handle_success_auth(message: Message, state: FSMContext):
     await message.answer('Вы успешно авторизовались.\nНадеюсь, я решу поставленную цель!')
     await handle_menu(message, state)
     
-    
-@router.message(RegistrationState.name, F.text.lower() == 'назад')
-@router.message(LoginState.phone, F.text.lower() == 'назад')
-async def handle_back_start(message: Message, state: FSMContext):
-    await handle_start(message, state)

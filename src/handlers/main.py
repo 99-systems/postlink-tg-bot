@@ -5,7 +5,7 @@ from aiogram.types import Message, ReplyKeyboardRemove
 
 
 import src.database.models.crud as crud
-from src.common.states import AppState, SupportState
+from src.common.states import AppState, SupportState, RegistrationState, LoginState
 from src.common import keyboard as kb
 from src.database import db
 
@@ -25,7 +25,9 @@ async def start(message: Message, state: FSMContext):
     
     await handle_start(message, state)
         
-    
+
+@router.message(RegistrationState.name, F.text.lower() == 'назад')
+@router.message(LoginState.phone, F.text.lower() == 'назад')
 async def handle_start(message: Message, state: FSMContext):
     await message.answer('Еще раз Добро Пожаловать!', reply_markup=kb.auth_reply_mu)
     await state.set_state(AppState.auth)
