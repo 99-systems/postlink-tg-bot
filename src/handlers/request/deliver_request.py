@@ -166,8 +166,8 @@ async def date_retry(message: Message, state: FSMContext):
 
 @router.message(DeliverParcelState.date_confirmation, F.text.lower() == 'да')
 async def size_choose(message: Message, state: FSMContext):
-    await message.answer('Выберите пожалуйтса', reply_markup=ReplyKeyboardRemove())
-    await message.answer('Какую посылку Вы хотите взять?', reply_markup=kb.sizes_kb_del)
+    await message.answer('Какую посылку Вы хотите взять?', reply_markup=ReplyKeyboardRemove())
+    await message.answer('Укажите категорию  посылки', reply_markup=kb.sizes_kb_del)
     await state.set_state(DeliverParcelState.size_choose)
 
 
