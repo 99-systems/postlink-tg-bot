@@ -26,7 +26,6 @@ class TelegramUser(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     telegram = Column(BigInteger, unique=True, nullable=False, index=True)
     username = Column(String, nullable=True)
-    accepted_terms = Column(Boolean, default=False)
 
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))

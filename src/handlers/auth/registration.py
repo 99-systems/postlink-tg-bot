@@ -25,14 +25,7 @@ from src.services import sheets
 async def handle_registration(message: Message, state: FSMContext):
     
     
-    tg_user = crud.get_tg_user(db, message.from_user.id)  
-    
-    
-    if tg_user.accepted_terms:
-        await state.set_state(RegistrationState.name)
-        await message.reply('Как Вас зовут?', reply_markup=kb.back_reply_mu)
-    else:
-        await message.answer('''
+    await message.answer('''
 <b>Важно знать!</b>
 
 ❗ PostLink не участвует в доставке и не проверяет содержимое посылок.
@@ -41,13 +34,13 @@ async def handle_registration(message: Message, state: FSMContext):
 
 ‼️Перед началом работы ознакомьтесь с Пользовательским соглашением:
 ''', parse_mode='HTML')    
-        await state.set_state(AppState.terms)
-        await send_terms(message, state)
+    await state.set_state(AppState.terms)
+    await send_terms(message, state)
+        
     
 
 @router.message(F.text.lower() == 'согласен', AppState.terms)
 async def accept_terms(message: Message, state: FSMContext):
-    crud.accept_terms(db, message.from_user.id)
     
     await state.set_state(RegistrationState.name)
     await message.reply('Как Вас зовут?', reply_markup=kb.back_reply_mu)
