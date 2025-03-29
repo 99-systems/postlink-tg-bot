@@ -209,7 +209,7 @@ async def show_request_details(message: Message, state: FSMContext, tg_user_id =
         f"🛫Город отправления: <b>{from_city}</b>\n"
         f"🛫Город назначения: <b>{to_city}</b>\n"
         f"🗓Даты: <b>{start_date.strftime("%d.%m.%Y")} - {end_date.strftime("%d.%m.%Y")}</b>\n"
-        f"📊Категория:: {size_choose}\n"
+        f"📊Категория посылки: {size_choose}\n"
     )
     # TODO: FIX sheets, request_reminder
     sheets.record_add_deliver_req(delivery_req)

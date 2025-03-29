@@ -215,7 +215,7 @@ async def show_request_details(message: Message, state: FSMContext):
             f"🛫Город отправления: <b>{from_city}</b>\n"
             f"🛫Город назначения: <b>{to_city}</b>\n"
             f"🗓Даты: <b>{start_date.strftime("%d.%m.%Y")} - {end_date.strftime("%d.%m.%Y")}</b>\n"
-            f"📊Категория: <b>{size_choose}</b>\n"
+            f"📊Категория посылки: <b>{size_choose}</b>\n"
             f"📜Дополнительные примечания: <b>{description}</b>"
         )
         sheets.record_add_send_req(send_req)

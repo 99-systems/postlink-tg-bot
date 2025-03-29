@@ -36,7 +36,7 @@ async def request_status(message: Message, state: FSMContext):
         
         from_date = request.from_date.strftime('%d.%m.%Y')
         to_date = request.to_date.strftime('%d.%m.%Y')
-        text += f"\n🗓Даты: <b>{from_date} - {to_date}</b>\n📊Категория: <b>{request.size_type}</b>"
+        text += f"\n🗓Даты: <b>{from_date} - {to_date}</b>\n📊Категория посылки: <b>{request.size_type}</b>"
         
         if send:
             text += f"\n📜Дополнительные примечания: <b>{request.description}</b>"
