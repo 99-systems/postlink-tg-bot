@@ -29,14 +29,18 @@ async def request_status(message: Message, state: FSMContext):
     for request in requests:
         send = isinstance(request, SendRequest)
         
-        text = "<b>Заявка на отправку</b>\n" if send else "<b>Заявка на доставку</b>\n"
+        text = "📦<b>Заявка на поиск курьера</b>\n" if send else "📦<b>Заявка на поиск заказа (Посылки)</b>\n"
 
-        status = 'Открыта' if request.status == 'open' else 'Закрыта'
-        text += f'Номер заявки {request.id}\nСтатус: {status}\nМаршрут: {request.from_location} - {request.to_location}'
+        status = 'Активна' if request.status == 'open' else 'Неактивна'
+        text += f'📌Номер заявки {request.id}\n🛎Статус: <b>{status}</b>\n🛫Город отправления: <b>{request.from_location}</b>\n🛫Город назначения: <b>{request.to_location}</b>'
         
         from_date = request.from_date.strftime('%d.%m.%Y')
         to_date = request.to_date.strftime('%d.%m.%Y')
-        text += f"\nДата: {from_date} - {to_date}\nТип груза: {request.size_type}"
+        text += f"\n🗓Даты: <b>{from_date} - {to_date}</b>\n📊Категория: <b>{request.size_type}</b>"
+        
+        if send:
+            text += f"\n📜Дополнительные примечания: <b>{request.description}</b>"
+        
 
         sent_message = await message.answer(text, reply_markup=kb.create_close_req_button('send' if send else 'delivery', request.id), parse_mode='HTML')
         
