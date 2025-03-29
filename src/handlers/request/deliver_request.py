@@ -97,14 +97,14 @@ async def to_city(message: Message, state: FSMContext):
         await state.update_data(to_city=place["display_name"])
     else:
         data = await state.get_data()
-        await state.update_data(try_count=data.get('try_count', 0) + 1)
+        await state.update_data(try_count=(data.get('try_count', 0) + 1))
         await message.answer('Город не найден. Попробуйте еще раз')
 
 @router.message(DeliverParcelState.to_city_confirmation, F.text.lower() == 'да')
 async def date_choose(message: Message, state: FSMContext):
     await state.set_state(DeliverParcelState.date_choose)
     await state.update_data(start_date=None, end_date=None)
-    await message.answer(message.chat.id, text='Выберите пожалуйста', reply_markup=ReplyKeyboardRemove())
+    await message.answer('Выберите пожалуйста', reply_markup=ReplyKeyboardRemove())
     await message.answer('Укажите, в какие числа Вам желательно взять заказ (посылку) у клиента (отправителя).\n<i>Чем шире охват дат, которые Вы укажете, тем больше шанс найти подходящего отправителя</i>', parse_mode='HTML', reply_markup=await DialogCalendar().start_calendar())
     
 
@@ -186,11 +186,11 @@ async def process_size_choose(callback: CallbackQuery, state: FSMContext):
 
     await state.update_data(size_choose=size_choose)
     await callback.answer()
-    await show_request_details(callback.message, state, user = callback.from_user)
+    await show_request_details(callback.message, state, tg_user_id = callback.from_user.id)
 
-async def show_request_details(message: Message, state: FSMContext, user = None):
-    if user is None:
-        user = message.from_user
+async def show_request_details(message: Message, state: FSMContext, tg_user_id = None):
+    if tg_user_id is None:
+        tg_user_id = message.from_user
 
     data = await state.get_data()
     from_city = data.get('from_city', 'Не указано')
@@ -199,7 +199,7 @@ async def show_request_details(message: Message, state: FSMContext, user = None)
     end_date = data.get('end_date', None)
     size_choose = data.get('size_choose', 'Не указаны')
 
-    delivery_req = crud.create_delivery_request(db, user.id, from_city, to_city, start_date, end_date, size_choose)
+    delivery_req = crud.create_delivery_request(db, tg_user_id, from_city, to_city, start_date, end_date, size_choose)
 
     details_message = (
         f"Детали заявки:\n"
@@ -213,7 +213,54 @@ async def show_request_details(message: Message, state: FSMContext, user = None)
     # TODO: FIX sheets, request_reminder
     sheets.record_add_deliver_req(delivery_req)
     await request_reminder.send_request(delivery_req)
-    await message.answer(f'🎉Поздравляю! Я открыл для Вас заявку на поиск заказа. Я сообщу, как только по Вашей заявке найдется посылка!🙌🏻\n{details_message}', reply_markup=kb.main_menu_open_req_reply_mu)
-    await state.set_state(AppState.menu)
-
+    await message.answer(f'🎉Поздравляю! Я открыл для Вас заявку на поиск заказа. Я сообщу, как только по Вашей заявке найдется посылка!🙌🏻\n{details_message}', reply_markup=ReplyKeyboardRemove())
+    await state.update_data(delivery_req_id=delivery_req.id)
     await matcher.match_delivery_request(delivery_req)
+
+    user = crud.get_user_by_tg_id(db, tg_user_id)
+    open_requests = crud.get_all_open_delivery_requests_by_user_id(db, user.id)
+
+    if (len(open_requests) < 2):
+        await handle_offer_another_delivery_request(message, state)
+    else:
+        await handle_no_another_delivery_request(message, state)
+    
+    
+async def handle_offer_another_delivery_request(message: Message, state: FSMContext):
+    await state.set_state(DeliverParcelState.another_delivery_request)
+    await message.answer('Хотите взять еще одну посылку?', reply_markup=kb.confirmation_reply_mu)
+
+@router.message(AppState.menu, F.text.lower() == 'создать еще одну заявку')
+@router.message(DeliverParcelState.another_delivery_request, F.text.lower() == 'да')
+async def handle_another_delivery_request(message: Message, state: FSMContext):
+    
+    state_data = await state.get_data()
+    
+    delivery_req_id = state_data.get('delivery_req_id', None)
+    delivery_req = crud.get_delivery_request_by_id(db, delivery_req_id)
+    
+    await state.set_state(DeliverParcelState.another_delivery_request_confirmation)
+    await message.answer(f'Отлично! Создаем еще одну заявку на поиск заказа (посылки). Вы хотите найти заказ по такому же маршруту?\n{delivery_req.from_date} - {delivery_req.to_date}\n{delivery_req.from_location} - {delivery_req.to_location}', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Да')], [KeyboardButton(text='Хочу указать другой маршрут')], [KeyboardButton(text='Отмена')]], resize_keyboard=True))
+
+@router.message(DeliverParcelState.another_delivery_request, F.text.lower() == 'нет')
+async def handle_no_another_delivery_request(message: Message, state: FSMContext):
+    await menu.handle_menu(message, state)
+    
+
+@router.message(DeliverParcelState.another_delivery_request)
+async def handle_no_match_another_delivery_request(message: Message, state: FSMContext):
+    await message.answer('Пожалуйста, выберите один из вариантов', reply_markup=kb.confirmation_reply_mu)
+    
+
+@router.message(DeliverParcelState.another_delivery_request_confirmation, F.text.lower() == 'отмена')
+async def handle_cancel_another_delivery_request(message: Message, state: FSMContext):
+    await handle_no_another_delivery_request(message, state)
+    
+@router.message(DeliverParcelState.another_delivery_request_confirmation, F.text.lower() == 'хочу указать другой маршрут')
+async def handle_change_route_another_delivery_request(message: Message, state: FSMContext):
+    await message.answer('К сожалению, несколько одновременных заявок можно открыть только по одинаковым маршрутам. Если Вы хотите открыть заявку по новому маршруту, то необходимо завершить текущую заявку и после открыть новую.', reply_markup=ReplyKeyboardRemove())
+    await handle_no_another_delivery_request(message, state)
+    
+@router.message(DeliverParcelState.another_delivery_request_confirmation, F.text.lower() == 'да')
+async def handle_another_delivery_request_confirmation(message: Message, state: FSMContext):
+    await size_choose(message, state)

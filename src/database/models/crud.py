@@ -22,11 +22,12 @@ def delete_session(db: Session, user_id: int):
     db.delete(session)
     db.commit()
 
-def get_session_by_tg_id(db: Session, tg_id: int) -> Optional[TgSession]:
-    tg_user = db.query(TelegramUser).filter(TelegramUser.telegram == tg_id).first()
+def get_session_by_tg_id(db: Session, tg_id: str) -> Optional[TgSession]:
+    tg_user = db.query(TelegramUser).filter(TelegramUser.telegram == str(tg_id)).first()
     if not tg_user:
         return None
-    return db.query(TgSession).filter(TgSession.user_id == tg_user.user_id).first()
+    session = db.query(TgSession).filter(TgSession.user_id == tg_user.user_id).first()
+    return session
 
 def set_user_id_for_tg_user(db: Session, tg_id: int, user_id: int):
     tg_user = db.query(TelegramUser).filter(TelegramUser.telegram == tg_id).first()
@@ -198,12 +199,21 @@ def get_request_status_by_tg_id(db: Session, tg_id: int) -> Optional[str]:
 
     
 
-def is_open_request_by_tg_id(db: Session, tg_id: int) -> bool:
-    req_status = get_request_status_by_tg_id(db, tg_id)
+def get_open_request(db: Session, tg_id: int) -> bool:
+    user = get_user_by_tg_id(db, tg_id)
+    if not user:
+        return False
 
-    if req_status:
-        return True
-    return False
+    send_req = db.query(SendRequest).filter(SendRequest.user_id == user.id, SendRequest.status == 'open').first()
+    delivery_req = db.query(DeliveryRequest).filter(DeliveryRequest.user_id == user.id, DeliveryRequest.status == 'open').first()
+
+    if not send_req and not delivery_req:
+        return None
+
+    if send_req:
+        return send_req
+    
+    return delivery_req
         
 def get_request_by_tg_id(db: Session, tg_id: int) -> Optional[List[SendRequest | DeliveryRequest]]:
     user = get_user_by_tg_id(db, tg_id)
@@ -285,3 +295,10 @@ def get_send_request_by_id(db: Session, req_id: int):
 
 def get_delivery_request_by_id(db: Session, req_id: int):
     return db.query(DeliveryRequest).filter(DeliveryRequest.id == req_id).first()
+
+def get_all_open_delivery_requests_by_tg_id(db: Session, tg_id: str) -> List[DeliveryRequest]:
+    tg_user = db.query(TelegramUser).filter(TelegramUser.telegram == tg_id).first()
+    return db.query(DeliveryRequest).filter(DeliveryRequest.user_id == tg_user.user_id, DeliveryRequest.status == 'open').all()
+
+def get_all_open_delivery_requests_by_user_id(db: Session, user_id: int) -> List[DeliveryRequest]:
+    return db.query(DeliveryRequest).filter(DeliveryRequest.user_id == user_id, DeliveryRequest.status == 'open').all()
