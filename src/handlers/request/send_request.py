@@ -156,7 +156,7 @@ async def process_calendar(callback_query: CallbackQuery, callback_data: DialogC
 
 @router.message(SendParcelState.date_confirmation, F.text.lower() == 'да')
 async def size_choose(message: Message, state: FSMContext):
-    await message.answer('Выберите пожалуйтса', reply_markup=ReplyKeyboardRemove())
+    await message.answer('Укажите категорию Вашей посылки', reply_markup=ReplyKeyboardRemove())
     await message.answer('Какой вес и габариты посылки?', reply_markup=kb.sizes_kb)
     await state.set_state(SendParcelState.size_confirmation)
     
