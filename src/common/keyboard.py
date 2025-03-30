@@ -26,7 +26,7 @@ auth_reply_mu = ReplyKeyboardMarkup(keyboard=auth_kb, resize_keyboard=True)
 terms_kb = [[KeyboardButton(text='Согласен')], [KeyboardButton(text='Не согласен')]]
 terms_reply_mu = ReplyKeyboardMarkup(keyboard=terms_kb, resize_keyboard=True)
 
-open_terms_kb = [[KeyboardButton(text='Открыть пользовательское соглашение')]]
+open_terms_kb = [[KeyboardButton(text='Открыть Пользовательское Соглашение и Политику конфиденциальности')]]
 open_terms_reply_mu = ReplyKeyboardMarkup(keyboard=open_terms_kb, resize_keyboard=True)
 
 back_kb = [[KeyboardButton(text='Назад')]]

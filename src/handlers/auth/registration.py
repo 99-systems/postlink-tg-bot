@@ -33,7 +33,8 @@ async def handle_registration(message: Message, state: FSMContext):
 Мы только находим и связываем нужные контакты за небольшую плату.
 Вся ответственность за передачу и безопасность сделки лежит на самих пользователях.
 
-‼️Перед началом работы ознакомьтесь с Пользовательским соглашением:
+‼️Перед началом работы ознакомьтесь с Пользовательским соглашением
+и Политикой конфиденциальности:
 ''', parse_mode='HTML')    
     await state.set_state(AppState.terms)
     await send_terms(message, state)
@@ -49,14 +50,15 @@ async def accept_terms(message: Message, state: FSMContext):
 @router.message(F.text.lower() == 'не согласен', AppState.terms)
 async def decline_terms(message: Message, state: FSMContext):
     await state.set_state(AppState.terms_declined)
-    await message.answer('К сожалению, без согласия с пользовательским соглашением, использование PostLink невозможно.\nПрошу еще раз ознакомиться с пользовательским соглашением и нажать "Согласен" для дальнейшего взаимодействия.', reply_markup=kb.open_terms_reply_mu)
+    await message.answer('К сожалению, без согласия с пользовательским соглашением и политикой конфиденциальности, использование PostLink невозможно.\nПрошу еще раз ознакомиться с пользовательским соглашением и нажать "Согласен" для дальнейшего взаимодействия.', reply_markup=kb.open_terms_reply_mu)
 
 
-@router.message(F.text.lower() == 'открыть пользовательское соглашение', AppState.terms_declined)
+@router.message(F.text.lower() == 'открыть пользовательское соглашение и политику конфиденциальности', AppState.terms_declined)
 async def send_terms(message: Message, state: FSMContext):
     await state.set_state(AppState.terms)
-    await message.answer_document(document=FSInputFile('src/files/user_agreement.pdf', 'Пользовательское соглашение.pdf'), caption='✅ Нажимая «Согласен», ты подтверждаешь, что ознакомился с условиями использования сервиса.', reply_markup=kb.terms_reply_mu)
-    
+    await message.answer_document(document=FSInputFile('src/files/privacy_policy.pdf', 'Политика конфиденциальности.pdf'))
+    await message.answer_document(document=FSInputFile('src/files/user_agreement.pdf', 'Пользовательское соглашение.pdf'))
+    await message.answer('✅ Нажимая «Согласен», ты подтверждаешь, что ознакомился с условиями использования сервиса.', reply_markup=kb.terms_reply_mu)
 
 @router.message(AppState.terms)
 @router.message(AppState.terms_declined)
