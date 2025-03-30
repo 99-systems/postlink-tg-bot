@@ -60,7 +60,7 @@ async def from_city(message: Message, state: FSMContext):
 async def from_city_retry(message: Message, state: FSMContext):
     await state.set_state(SendParcelState.from_city)
     curr_city = crud.get_city_by_tg_id(db, message.from_user.id)
-    await message.answer('Прошу прощения, наверное, я не правильно Вас понял!', reply_markup=kb.request_location_and_back_reply_mu)
+    await message.answer('Прошу прощения, наверное, я неправильно Вас понял!', reply_markup=kb.request_location_and_back_reply_mu)
     await message.answer('Пожалуйста, отправьте название Вашего города еще раз. Убедитесь, что Вы не допустили ошибок.', reply_markup=kb.create_from_curr_city_mu(curr_city))
 
 
@@ -93,7 +93,7 @@ async def to_city_confirmation(message: Message, state: FSMContext):
 
 @router.message(SendParcelState.to_city_confirmation, F.text.lower() == 'неверный адрес')
 async def to_city_retry(message: Message, state: FSMContext):
-    await message.answer('Прошу прощения, наверное, я не правильно Вас понял! Пожалуйста, отправьте название города еще раз. Убедитесь, что Вы не допустили ошибок.', reply_markup=ReplyKeyboardRemove())
+    await message.answer('Прошу прощения, наверное, я неправильно Вас понял! Пожалуйста, отправьте название города еще раз. Убедитесь, что Вы не допустили ошибок.', reply_markup=ReplyKeyboardRemove())
     await state.set_state(SendParcelState.to_city)
 
 @router.message(SendParcelState.to_city_confirmation, F.text.lower() == 'да')

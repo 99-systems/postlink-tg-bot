@@ -64,7 +64,7 @@ async def from_city_confirmation(message: Message, state: FSMContext, place):
 async def from_city_retry(message: Message, state: FSMContext):
     await state.set_state(DeliverParcelState.from_city)
     curr_city = crud.get_city_by_tg_id(db, message.from_user.id)
-    await message.answer('Прошу прощения, наверное я не правильно Вас понял!', reply_markup=kb.request_location_and_back_reply_mu)
+    await message.answer('Прошу прощения, наверное, я неправильно Вас понял!', reply_markup=kb.request_location_and_back_reply_mu)
     await message.answer('Пожалуйста, отправьте название Вашего города еще раз.\nУбедитесь, что Вы не допустили ошибок.', reply_markup=kb.create_from_curr_city_mu(curr_city))
 
     
@@ -187,12 +187,11 @@ async def process_size_choose(callback: CallbackQuery, state: FSMContext):
     await state.update_data(size_choose=size_choose)
     await callback.answer()
     
-    await offer_description(callback.message, state, tg_user_id = callback.from_user.id)
+    await offer_description(callback.message, state)
 
 
-async def offer_description(message: Message, state: FSMContext, tg_user_id = None):
+async def offer_description(message: Message, state: FSMContext):
     await message.answer('Есть ли дополнительные требования или примечания к предмету посылки ? (Например: не беру хрупкие товары, электронику, продукты питания)', reply_markup=kb.no_desc_kb)
-    await show_request_details(message, state, tg_user_id)
     await state.set_state(DeliverParcelState.description)
 
 @router.message(DeliverParcelState.description)
@@ -215,7 +214,7 @@ async def show_request_details(message: Message, state: FSMContext, tg_user_id =
     size_choose = data.get('size_choose', 'Не указаны')
     description = data.get('description', 'Не указаны')
 
-    delivery_req = crud.create_delivery_request(db, tg_user_id, from_city, to_city, start_date, end_date, size_choose)
+    delivery_req = crud.create_delivery_request(db, tg_user_id, from_city, to_city, start_date, end_date, size_choose, description)
 
     details_message = (
         f"Детали заявки:\n"

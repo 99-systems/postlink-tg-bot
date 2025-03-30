@@ -125,7 +125,7 @@ def create_send_request(db: Session, tg_id: int, from_location: str, to_location
 
     return new_request
 
-def create_delivery_request(db: Session, tg_id: int, from_location: str, to_location: str, from_date: str | datetime, to_date: str | datetime, size_type: str) -> Optional[DeliveryRequest]:
+def create_delivery_request(db: Session, tg_id: int, from_location: str, to_location: str, from_date: str | datetime, to_date: str | datetime, size_type: str, description: str) -> Optional[DeliveryRequest]:
 
     if isinstance(from_date, str):
         from_date = datetime.strptime(from_date.strip(), "%d.%m.%Y")
@@ -142,7 +142,8 @@ def create_delivery_request(db: Session, tg_id: int, from_location: str, to_loca
         user_id=user.id,
         from_date=from_date,
         to_date=to_date,
-        size_type=size_type
+        size_type=size_type,
+        description=description
     )
 
     db.add(new_request)
