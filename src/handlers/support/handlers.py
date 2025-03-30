@@ -55,7 +55,7 @@ async def handle_request_no(message: Message, state: FSMContext):
         request_data = crud.get_delivery_request_by_id(db, message.text)
         
     if not request_data:
-        await message.answer('Заявка с таким номером не найдена. Пожалуйста, проверьте номер заявки и попробуйте еще раз', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Проблема не связана с какой-либо из заявок')]], resize_keyboard=True))
+        await message.answer('Неверный номер заявки. Пожалуйста, уточните номер заявки, по которой возникла проблема, и отправьте его повторно.', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Проблема не связана с какой-либо из заявок')]], resize_keyboard=True))
         return
     
     type_of_request = 'send' if isinstance(request_data, SendRequest) else 'delivery'
@@ -64,8 +64,10 @@ async def handle_request_no(message: Message, state: FSMContext):
     text += f'\n\n📦<b>Заявка на поиск курьера</b>\n' if type_of_request == 'send' else f'\n\n📦<b>Заявка на поиск заказа (Посылки)</b>\n'
     text += f'📌Номер заявки {request_data.id}\n🛎Статус: <b>{request_data.status}</b>\n🛫Город отправления: <b>{request_data.from_location}</b>\n🛫Город назначения: <b>{request_data.to_location}</b>'
     text += f'\n🗓Даты: <b>{request_data.from_date.strftime("%d.%m.%Y")} - {request_data.to_date.strftime("%d.%m.%Y")}</b>\n📊Категория: <b>{request_data.size_type}</b>'
-    if type_of_request == 'send':
+    if request_data.description != 'Пропустить':
         text += f'\n📜Дополнительные примечания: <b>{request_data.description}</b>'
+    else:
+        text += f'\n📜Дополнительные примечания: <b>Нету</b>'
     await message.answer(text, reply_markup=kb.confirmation_reply_mu, parse_mode='HTML')
     await state.set_state(SupportState.confirmation)
     

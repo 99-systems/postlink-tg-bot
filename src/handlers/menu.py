@@ -36,8 +36,7 @@ async def security_info(message: Message, state: FSMContext):
     )
 
     await message.answer(
-        "<b>PostLink</b> очень ценит безопасность наших пользователей! "
-        "Прошу ознакомиться с рекомендациями, которые помогут избежать неудобств!",
+        "<b>PostLink</b> заботится о безопасности своих пользователей. Пожалуйста, ознакомьтесь с рекомендациями, которые помогут избежать рисков и недоразумений.",
         reply_markup=reply_markup, parse_mode='HTML'
     )
 
