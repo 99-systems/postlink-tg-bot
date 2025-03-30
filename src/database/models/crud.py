@@ -165,8 +165,8 @@ def get_matched_requests_for_send(db: Session, send_req: SendRequest) -> list[De
         ),
         or_(
             DeliveryRequest.size_type == send_req.size_type, 
-            DeliveryRequest.size_type == 'Не указаны', 
-            send_req.size_type == 'Не указаны'
+            DeliveryRequest.size_type == 'Не указана', 
+            send_req.size_type == 'Не указана'
         ),
         DeliveryRequest.status == 'open'
     ).all()
@@ -181,8 +181,8 @@ def get_matched_requests_for_delivery(db: Session, delivery_req: DeliveryRequest
         ),
         or_(
             SendRequest.size_type == delivery_req.size_type, 
-            SendRequest.size_type == 'Не указаны', 
-            delivery_req.size_type == 'Не указаны'
+            SendRequest.size_type == 'Не указана', 
+            delivery_req.size_type == 'Не указана'
         ),
         SendRequest.status == 'open'
     ).all()
