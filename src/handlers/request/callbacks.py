@@ -1,6 +1,6 @@
 from aiogram.filters.callback_data import CallbackData
 from enum import Enum
-from dataclasses import asdict
+from dataclasses import dataclass, asdict
 
 class User(str, Enum):
     sender = 'sender'
@@ -19,15 +19,12 @@ class RequestCallback(CallbackData, prefix='request'):
     delivering_user_id: int
     
     def to_dict(self):
-        return asdict(self)
+        return {
+            "user": self.user.value,
+            "action": self.action.value,
+            "send_request_id": self.send_request_id,
+            "delivery_request_id": self.delivery_request_id,
+            "sending_user_id": self.sending_user_id,
+            "delivering_user_id": self.delivering_user_id,
+        }
     
-    @classmethod
-    def from_dict(cls, data):
-        return cls(
-            user=User(data["user"]),
-            action=Action(data["action"]),
-            send_request_id=data["send_request_id"],
-            delivery_request_id=data["delivery_request_id"],
-            sending_user_id=data["sending_user_id"],
-            delivering_user_id=data["delivering_user_id"],
-        )
