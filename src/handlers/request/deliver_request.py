@@ -183,11 +183,11 @@ async def process_size_choose(callback: CallbackQuery, state: FSMContext):
         "medium": "Средняя",
         "large": "Большая",
         "extra_large": "Крупногабаритная",
-        "skip": "Не указаны"
+        "skip": "Не указана"
     }
 
     size_key = callback.data.split(':')[1]
-    size_choose = SIZE_TRANSLATION.get(size_key, "Не указаны")
+    size_choose = SIZE_TRANSLATION.get(size_key, "Не указана")
 
     await state.update_data(size_choose=size_choose)
     await callback.answer()
@@ -216,7 +216,7 @@ async def show_request_details(message: Message, state: FSMContext, tg_user_id =
     to_city = data.get('to_city', 'Не указано')
     start_date = data.get('start_date', None)
     end_date = data.get('end_date', None)
-    size_choose = data.get('size_choose', 'Не указаны')
+    size_choose = data.get('size_choose', 'Не указана')
     description = data.get('description', 'Не указаны')
 
     delivery_req = crud.create_delivery_request(db, tg_user_id, from_city, to_city, start_date, end_date, size_choose, description)
