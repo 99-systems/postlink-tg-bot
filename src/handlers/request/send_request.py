@@ -209,13 +209,14 @@ async def show_request_details(message: Message, state: FSMContext):
         send_req = crud.create_send_request(db, message.from_user.id, from_city, to_city, start_date.strftime("%d.%m.%Y"), end_date.strftime("%d.%m.%Y"), size_choose, description)
         details_message = (
             f"Детали заявки:\n"
-            "Статус вашей заявки: Открыта.\n"
-            f"Номер заявки: {send_req.id}.\n"
-            f"Город отправления: {from_city}\n"
-            f"Город назначения: {to_city}\n"
-            f"Дата отправления: с {start_date} по {end_date}\n"
-            f"Вес и габариты: {size_choose}\n"
-            f"Дополнительные требования: {description}\n"
+            "<b>Заявка на поиск курьера</b>\n"
+            f"📌Номер заявки: <b>{send_req.id}</b>.\n"
+            "🛎Статус: <b>Активна</b>.\n"
+            f"🛫Город отправления: <b>{from_city}</b>\n"
+            f"🛫Город назначения: <b>{to_city}</b>\n"
+            f"🗓Даты: <b>{start_date.strftime("%d.%m.%Y")} - {end_date.strftime("%d.%m.%Y")}</b>\n"
+            f"📊Категория посылки: <b>{size_choose}</b>\n"
+            f"📜Дополнительные примечания: <b>{description}</b>"
         )
         sheets.record_add_send_req(send_req)
         await request_reminder.send_request(send_req)

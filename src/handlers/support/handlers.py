@@ -4,6 +4,7 @@ from aiogram import F
 
 from src.database import db
 from src.database.models import crud
+from src.database.models.request import SendRequest
 from src.common.states import SupportState
 from src.handlers import menu
 from src.services import supp_request_sender as supp_serv
@@ -57,7 +58,15 @@ async def handle_request_no(message: Message, state: FSMContext):
         await message.answer('Заявка с таким номером не найдена. Пожалуйста, проверьте номер заявки и попробуйте еще раз', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Проблема не связана с какой-либо из заявок')]], resize_keyboard=True))
         return
     
-    await message.answer(f'''У вас возникла проблема по данной заявке?\nДетали заявки:\nСтатус вашей заявки: {request_data.status}\nНомер заявки: {request_data.id}\nГород отправления: {request_data.from_location}\nГород назначения: {request_data.to_location}\nДата отправления: c {request_data.from_date} по {request_data.to_date}\nВес и габариты: {request_data.size_type}\nДополнительные требования: {request_data.description}''', reply_markup=kb.confirmation_reply_mu)
+    type_of_request = 'send' if isinstance(request_data, SendRequest) else 'delivery'
+    
+    text = f'''У вас возникла проблема по данной заявке?'''
+    text += f'\n\n📦<b>Заявка на поиск курьера</b>\n' if type_of_request == 'send' else f'\n\n📦<b>Заявка на поиск заказа (Посылки)</b>\n'
+    text += f'📌Номер заявки {request_data.id}\n🛎Статус: <b>{request_data.status}</b>\n🛫Город отправления: <b>{request_data.from_location}</b>\n🛫Город назначения: <b>{request_data.to_location}</b>'
+    text += f'\n🗓Даты: <b>{request_data.from_date.strftime("%d.%m.%Y")} - {request_data.to_date.strftime("%d.%m.%Y")}</b>\n📊Категория: <b>{request_data.size_type}</b>'
+    if type_of_request == 'send':
+        text += f'\n📜Дополнительные примечания: <b>{request_data.description}</b>'
+    await message.answer(text, reply_markup=kb.confirmation_reply_mu, parse_mode='HTML')
     await state.set_state(SupportState.confirmation)
     
 @router.message(SupportState.request_no, F.text.lower() == 'проблема не связана с какой-либо из заявок')

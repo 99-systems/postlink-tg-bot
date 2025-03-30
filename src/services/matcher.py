@@ -24,12 +24,12 @@ async def match_delivery_request(delivery_req: DeliveryRequest):
 
 
 async def notify_delivery_user(send_req: SendRequest, delivery_req: DeliveryRequest):
-    text = f'Мы нашли вам отправителя! По вашему номеру заявки на доставку {delivery_req.id}. '
-    text += f'\n<b>Информация от отправителя:</b>\nМаршрут: {send_req.from_location} - {send_req.to_location}'
-    text += f'\nВес и габариты: {send_req.size_type}'
+    text = f'🎉 Поздравляем, по Вашей <b>заявке №{delivery_req.id}</b> найден заказ!". '
+    text += f'\n<b>Вот данные от отправителя посылки:</b>\n<b>🛫Город отправления:</b> {send_req.from_location}\n<b>🛫Город назначения:</b> {send_req.to_location}\n<b>Даты:</b> {send_req.from_date.strftime("%d.%m.%Y") - {send_req.to_date.strftime("%d.%m.%Y")}}'
+    text += f'\n<b>📊Категория посылки:</b> {send_req.size_type}'
 
     if send_req.description != 'Пропустить':
-        text += f'\nДополнительные требования: {send_req.description}'
+        text += f'\n<b>📜 Дополнительные примечания:</b> {send_req.description}'
 
     await bot.send_message(delivery_req.user.telegram_user.telegram, 
                            text, reply_markup=kb.create_accept_buttons_for_delivery(send_req.id, delivery_req.id, send_req.user_id, delivery_req.user_id),
