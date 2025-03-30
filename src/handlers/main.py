@@ -29,9 +29,8 @@ async def start(message: Message, state: FSMContext):
 @router.message(RegistrationState.name, F.text.lower() == 'назад')
 @router.message(LoginState.phone, F.text.lower() == 'назад')
 async def handle_start(message: Message, state: FSMContext):
-    await message.answer('Еще раз Добро Пожаловать!', reply_markup=kb.auth_reply_mu)
+    await message.answer('Приступим к работе!', reply_markup=kb.auth_reply_mu)
     await state.set_state(AppState.auth)
-
 
     
 @router.message(F.text.lower() == 'служба поддержки', AppState.menu)

@@ -78,9 +78,7 @@ async def accept_request_from_sender_kb(callback: CallbackQuery, callback_data: 
     
     crud.close_delivery_request(db, callback_data.delivery_request_id)
     sheets.record_close_deliver_req(callback_data.delivery_request_id)
-    reply_markup = (kb.main_menu_open_req_reply_mu 
-                if crud.is_open_request_by_tg_id(db, delivery_user.telegram_user.telegram) 
-                else kb.main_menu_reply_mu)
+    reply_markup = kb.create_main_menu_markup(callback.from_user.id)
     
     await bot.send_message(delivery_user.telegram_user.telegram, f'Отправитель принял ваше предложение. Свяжитесь с ним для уточнения деталей доставки.\n{sender_contact_info}')
     await bot.send_message(delivery_user.telegram_user.telegram, 'Ваша заявка на доставку была закрыта.', reply_markup=reply_markup)
@@ -96,9 +94,7 @@ async def accept_request_from_sender_kb(callback: CallbackQuery, callback_data: 
         delivery_user_contact_info += f"(ID: {delivery_user.telegram_user.telegram})"
     crud.close_send_request(db, callback_data.send_request_id)
     sheets.record_close_send_req(callback_data.send_request_id)
-    reply_markup = (kb.main_menu_open_req_reply_mu 
-                if crud.is_open_request_by_tg_id(db, sender_user.telegram_user.telegram) 
-                else kb.main_menu_reply_mu)
+    reply_markup = kb.create_main_menu_markup(callback.from_user.id)
     await callback.message.answer(f'Ваше предложение принято. Свяжитесь с курьером для уточнения деталей доставки.\n{delivery_user_contact_info}')
     await callback.message.answer('Ваша заявка на отправку была закрыта.', reply_markup=reply_markup)
 
@@ -114,9 +110,7 @@ async def accept_request_from_delivery_kb(callback: CallbackQuery, callback_data
     
     await callback.message.delete()
     
-    reply_markup = (kb.main_menu_open_req_reply_mu 
-                    if crud.is_open_request_by_tg_id(db, callback.message.from_user.id) 
-                    else kb.main_menu_reply_mu)
+    reply_markup = kb.create_main_menu_markup(callback.from_user.id)
     
     
     send_req_id = callback_data.send_request_id
@@ -132,7 +126,7 @@ async def accept_request_from_delivery_kb(callback: CallbackQuery, callback_data
     tg_id_of_send_req = send_req.user.telegram_user.telegram
     delivery_user = crud.get_user_by_id(db, callback_data.delivering_user_id)
     
-    await bot.send_message(tg_id_of_send_req, 'Курьер готов взять ваш заказ.', reply_markup=kb.create_accept_buttons_for_sender(send_req_id, callback_data.delivery_request_id, send_req.user_id, delivery_user.id))    
+    await bot.send_message(tg_id_of_send_req, f'<b>🎉 Поздравляем! По вашей заявке №{send_req_id} найден курьер.</b>Вот его данные', reply_markup=kb.create_accept_buttons_for_sender(send_req_id, callback_data.delivery_request_id, send_req.user_id, delivery_user.id))    
     
     await callback.message.answer('Ваше предложение принято и отправлено отправителю. Ожидайте его ответа. В случае одобрения заявки вы получите сообщение с контактными данными отправителя.', reply_markup=reply_markup)
     await callback.answer()
