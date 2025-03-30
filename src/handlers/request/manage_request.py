@@ -114,6 +114,7 @@ async def handle_continue_search(message: Message, state: FSMContext):
     callback_data = state_data.get('callback_data')
     reject_request_user_type = state_data.get('reject_request_user_type')
     
+    text = ''
     
     if reject_request_user_type == 'sender':
         send_req_id = callback_data['send_request_id']
@@ -133,7 +134,7 @@ async def handle_continue_search(message: Message, state: FSMContext):
     if req.description != 'Пропустить':
         text += f"\n📜Дополнительные примечания: <b>{req.description}</b>"
     else:
-        text += f"\n📜Дополнительные примечания: <b>Нету</b>"
+        text += f"\n📜Дополнительные примечания: <b>Не указаны</b>"
     
     await message.answer(f'Понял! Тогда Ваша заявка остается активной. Детали заявки:{text}', reply_markup=kb.create_main_menu_markup(message.from_user.id), parse_mode='HTML')
     await state.set_state(AppState.menu)
