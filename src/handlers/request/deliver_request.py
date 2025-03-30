@@ -209,7 +209,7 @@ async def description(message: Message, state: FSMContext):
 
 async def show_request_details(message: Message, state: FSMContext, tg_user_id = None):
     if tg_user_id is None:
-        tg_user_id = message.from_user
+        tg_user_id = message.from_user.id
 
     data = await state.get_data()
     from_city = data.get('from_city', 'Не указано')
