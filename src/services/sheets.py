@@ -41,7 +41,7 @@ def record_add_deliver_req(req: DeliveryRequest):
         client = client_init_json()
         table = get_table(client)
         worksheet = table.worksheet('Deliver requests')
-        data = [req.id, str(req.user_id) + '-' + req.user.name, req.from_location, req.to_location, req.from_date.isoformat(), req.to_date.isoformat(), req.size_type, req.status, req.created_at.isoformat(), req.updated_at.isoformat()]
+        data = [req.id, str(req.user_id) + '-' + req.user.name, req.from_location, req.to_location, req.from_date.isoformat(), req.to_date.isoformat(), req.size_type, req.description, req.status, req.created_at.isoformat(), req.updated_at.isoformat()]
         res = worksheet.append_row(data)
     except Exception as e:
         print("record_error: " + str(e))
@@ -64,7 +64,7 @@ def record_close_deliver_req(req_id: int):
         worksheet = table.worksheet('Deliver requests')
         cell = worksheet.find(str(req_id))
         row_number = cell.row 
-        worksheet.update_cell(row_number, 8, "closed")
+        worksheet.update_cell(row_number, 9, "closed")
     except Exception as e:
         print("record_error: " + str(e))
 
