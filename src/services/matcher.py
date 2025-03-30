@@ -25,7 +25,7 @@ async def match_delivery_request(delivery_req: DeliveryRequest):
 
 async def notify_delivery_user(send_req: SendRequest, delivery_req: DeliveryRequest):
     text = f'🎉 Поздравляем, по Вашей <b>заявке №{delivery_req.id}</b> найден заказ!". '
-    text += f'\n<b>Вот данные от отправителя посылки:</b>\n<b>🛫Город отправления:</b> {send_req.from_location}\n<b>🛫Город назначения:</b> {send_req.to_location}\n<b>Даты:</b> {send_req.from_date.strftime("%d.%m.%Y") - {send_req.to_date.strftime("%d.%m.%Y")}}'
+    text += f'\n<b>Вот данные от отправителя посылки:</b>\n<b>🛫Город отправления:</b> {send_req.from_location}\n<b>🛫Город назначения:</b> {send_req.to_location}\n<b>Даты:</b> {send_req.from_date.strftime("%d.%m.%Y")} - {send_req.to_date.strftime("%d.%m.%Y")}'
     text += f'\n<b>📊Категория посылки:</b> {send_req.size_type}'
 
     if send_req.description != 'Пропустить':

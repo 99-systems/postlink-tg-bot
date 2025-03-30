@@ -214,7 +214,7 @@ async def show_request_details(message: Message, state: FSMContext, tg_user_id =
     # TODO: FIX sheets, request_reminder
     sheets.record_add_deliver_req(delivery_req)
     await request_reminder.send_request(delivery_req)
-    await message.answer(f'🎉Поздравляю! Я открыл для Вас заявку на поиск заказа. Я сообщу, как только по Вашей заявке найдется посылка!🙌🏻\n{details_message}', reply_markup=ReplyKeyboardRemove())
+    await message.answer(f'🎉Поздравляю! Я открыл для Вас заявку на поиск заказа. Я сообщу, как только по Вашей заявке найдется посылка!🙌🏻\n{details_message}', reply_markup=ReplyKeyboardRemove(), parse_mode='HTML')
     await state.update_data(delivery_req_id=delivery_req.id)
     await matcher.match_delivery_request(delivery_req)
 

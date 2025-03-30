@@ -126,7 +126,7 @@ async def accept_request_from_delivery_kb(callback: CallbackQuery, callback_data
     tg_id_of_send_req = send_req.user.telegram_user.telegram
     delivery_user = crud.get_user_by_id(db, callback_data.delivering_user_id)
     
-    await bot.send_message(tg_id_of_send_req, f'<b>🎉 Поздравляем! По вашей заявке №{send_req_id} найден курьер.</b>Вот его данные', reply_markup=kb.create_accept_buttons_for_sender(send_req_id, callback_data.delivery_request_id, send_req.user_id, delivery_user.id))    
+    await bot.send_message(tg_id_of_send_req, f'<b>🎉 Поздравляем! По вашей заявке №{send_req_id} найден курьер.</b>Вот его данные', reply_markup=kb.create_accept_buttons_for_sender(send_req_id, callback_data.delivery_request_id, send_req.user_id, delivery_user.id), parse_mode='HTML')    
     
     await callback.message.answer('Ваше предложение принято и отправлено отправителю. Ожидайте его ответа. В случае одобрения заявки вы получите сообщение с контактными данными отправителя.', reply_markup=reply_markup)
     await callback.answer()

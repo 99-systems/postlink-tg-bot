@@ -222,7 +222,7 @@ async def show_request_details(message: Message, state: FSMContext):
         await request_reminder.send_request(send_req)
         await message.answer(
             f'🎉Поздравляю! Я открыл для Вас заявку на поиск курьера. Я сообщу, как только по Вашей заявке найдется доставщик!🙌🏻\n\n{details_message}', 
-            reply_markup=kb.main_menu_open_req_reply_mu
+            reply_markup=kb.main_menu_open_req_reply_mu, parse_mode='HTML'
         )
         await state.set_state(AppState.menu)
 
