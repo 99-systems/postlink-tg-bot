@@ -8,14 +8,15 @@ from src.bot import bot
 import src.common.keyboard as kb 
 
 async def match_send_request(send_req: SendRequest):
+    print('TEST MATCH SEND')
     delivery_reqs = crud.get_matched_requests_for_send(db, send_req)
     for delivery_req in delivery_reqs:
         await notify_delivery_user(send_req, delivery_req)
-
     return
 
 
 async def match_delivery_request(delivery_req: DeliveryRequest):
+    print('TEST MATCH DELIVERY')
     send_reqs = crud.get_matched_requests_for_delivery(db, delivery_req)
     for send_req in send_reqs:
         await notify_delivery_user(send_req, delivery_req)
