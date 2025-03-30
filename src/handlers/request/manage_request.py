@@ -173,7 +173,7 @@ async def accept_request_from_delivery_kb(callback: CallbackQuery, callback_data
     # Check if sending request is still open
     if send_req.status != 'open':
         await callback.message.delete()
-        await callback.answer('Заявка на отправку уже закрыта.')
+        await callback.message.answer('Заявка на отправку уже закрыта.')
         return
     
     # Request is open, proceed with matching
