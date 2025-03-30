@@ -105,7 +105,7 @@ async def reject_request_from_sender_kb(callback: CallbackQuery, callback_data: 
     await callback.message.delete()
     await callback.answer('Жаль! Видимо, курьер не подошел по каким-либо параметрам. Тогда продолжаем поиск?', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Да')], [KeyboardButton(text='Закрыть заявку')]], resize_keyboard=True))
     await state.update_data(reject_request_user_type='sender')
-    await state.update_data(callback_data=callback_data)
+    await state.update_data(callback_data=callback_data.to_dict())
     await state.set_state(ManageRequestState.ask_to_continue)
     
 @router.message(ManageRequestState.ask_to_continue, F.text.lower() == 'да')
@@ -116,11 +116,11 @@ async def handle_continue_search(message: Message, state: FSMContext):
     
     
     if reject_request_user_type == 'sender':
-        send_req_id = callback_data.send_request_id
+        send_req_id = callback_data['send_request_id']
         req = crud.get_send_request_by_id(db, send_req_id)
         text += "\n<b>📦Заявка на поиск заказа (Посылки)</b>"
     elif reject_request_user_type == 'delivery':
-        delivery_req_id = callback_data.delivery_request_id
+        delivery_req_id = callback_data['delivery_request_id']
         req = crud.get_delivery_request_by_id(db, delivery_req_id)
         text += "\n<b>📦Заявка на поиск курьера</b>"
     
@@ -145,12 +145,12 @@ async def handle_close_request(message: Message, state: FSMContext):
     reject_request_user_type = state_data.get('reject_request_user_type')
     
     if reject_request_user_type == 'sender':
-        send_req_id = callback_data.send_request_id
+        send_req_id = callback_data['send_request_id']
         crud.close_send_request(db, send_req_id)
         sheets.record_close_send_req(send_req_id)
         await message.answer('Ваша заявка на отправку была закрыта.', reply_markup=kb.create_main_menu_markup(message.from_user.id))
     elif reject_request_user_type == 'delivery':
-        delivery_req_id = callback_data.delivery_request_id
+        delivery_req_id = callback_data['delivery_request_id']
         crud.close_delivery_request(db, delivery_req_id)
         sheets.record_close_deliver_req(delivery_req_id)
         await message.answer('Ваша заявка на доставку была закрыта.', reply_markup=kb.create_main_menu_markup(message.from_user.id))
@@ -203,7 +203,7 @@ async def reject_request_from_delivery_kb(callback: CallbackQuery, callback_data
     await callback.answer('Жаль! Видимо, заказ не подошел по каким-либо параметрам. Тогда продолжаем поиск?', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Да')], [KeyboardButton(text='Закрыть заявку')]], resize_keyboard=True))
 
     await state.update_data(reject_request_user_type='delivery')
-    await state.update_data(callback_data=callback_data)
+    await state.update_data(callback_data=callback_data.to_dict())
     await state.set_state(ManageRequestState.ask_to_continue)
     
     
