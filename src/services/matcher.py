@@ -30,6 +30,8 @@ async def notify_delivery_user(send_req: SendRequest, delivery_req: DeliveryRequ
 
     if send_req.description != 'Пропустить':
         text += f'\n<b>📜 Дополнительные примечания:</b> {send_req.description}'
+    else:
+        text += f'\n<b>📜 Дополнительные примечания:</b> Нету'
 
     await bot.send_message(delivery_req.user.telegram_user.telegram, 
                            text, reply_markup=kb.create_accept_buttons_for_delivery(send_req.id, delivery_req.id, send_req.user_id, delivery_req.user_id),

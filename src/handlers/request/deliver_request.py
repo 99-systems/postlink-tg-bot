@@ -186,7 +186,22 @@ async def process_size_choose(callback: CallbackQuery, state: FSMContext):
 
     await state.update_data(size_choose=size_choose)
     await callback.answer()
-    await show_request_details(callback.message, state, tg_user_id = callback.from_user.id)
+    
+    await offer_description(callback.message, state, tg_user_id = callback.from_user.id)
+
+
+async def offer_description(message: Message, state: FSMContext, tg_user_id = None):
+    await message.answer('Есть ли дополнительные требования или примечания к предмету посылки ? (Например: не беру хрупкие товары, электронику, продукты питания)', reply_markup=kb.no_desc_kb)
+    await show_request_details(message, state, tg_user_id)
+    await state.set_state(DeliverParcelState.description)
+
+@router.message(DeliverParcelState.description)
+async def description(message: Message, state: FSMContext):
+    if message.text.lower() == 'пропустить':
+        await show_request_details(message, state)
+    else:
+        await state.update_data(description=message.text)
+        await show_request_details(message, state)
 
 async def show_request_details(message: Message, state: FSMContext, tg_user_id = None):
     if tg_user_id is None:
@@ -198,6 +213,7 @@ async def show_request_details(message: Message, state: FSMContext, tg_user_id =
     start_date = data.get('start_date', None)
     end_date = data.get('end_date', None)
     size_choose = data.get('size_choose', 'Не указаны')
+    description = data.get('description', 'Не указаны')
 
     delivery_req = crud.create_delivery_request(db, tg_user_id, from_city, to_city, start_date, end_date, size_choose)
 
@@ -210,6 +226,7 @@ async def show_request_details(message: Message, state: FSMContext, tg_user_id =
         f"🛫Город назначения: <b>{to_city}</b>\n"
         f"🗓Даты: <b>{start_date.strftime("%d.%m.%Y")} - {end_date.strftime("%d.%m.%Y")}</b>\n"
         f"📊Категория посылки: {size_choose}\n"
+        f"📋Дополнительные примечания: <b>{description}</b>\n"
     )
     # TODO: FIX sheets, request_reminder
     sheets.record_add_deliver_req(delivery_req)

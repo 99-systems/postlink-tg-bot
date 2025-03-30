@@ -48,5 +48,6 @@ class DeliverParcelState(StatesGroup):
     date_choose = State()
     date_confirmation = State()
     size_choose = State()
+    description = State()  
     another_delivery_request = State()
     another_delivery_request_confirmation = State()

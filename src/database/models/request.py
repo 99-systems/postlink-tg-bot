@@ -37,7 +37,7 @@ class DeliveryRequest(Base):
     from_date = Column(DateTime, nullable=False)  
     to_date = Column(DateTime, nullable=False)
     size_type = Column(String, nullable=True)
-    # description = Column(String, nullable=True)
+    description = Column(String, nullable=True)
 
     status = Column(String, nullable=False, default="open")
 
