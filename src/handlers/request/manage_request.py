@@ -137,7 +137,27 @@ async def handle_continue_search(message: Message, state: FSMContext):
     
     await message.answer(f'Понял! Тогда Ваша заявка остается активной. Детали заявки:{text}', reply_markup=kb.create_main_menu_markup(message.from_user.id), parse_mode='HTML')
     await state.set_state(AppState.menu)
+
+@router.message(ManageRequestState.ask_to_continue, F.text.lower() == 'закрыть заявку')
+async def handle_close_request(message: Message, state: FSMContext):
+    state_data = await state.get_data()
+    callback_data = state_data.get('callback_data')
+    reject_request_user_type = state_data.get('reject_request_user_type')
     
+    if reject_request_user_type == 'sender':
+        send_req_id = callback_data.send_request_id
+        crud.close_send_request(db, send_req_id)
+        sheets.record_close_send_req(send_req_id)
+        await message.answer('Ваша заявка на отправку была закрыта.', reply_markup=kb.create_main_menu_markup(message.from_user.id))
+    elif reject_request_user_type == 'delivery':
+        delivery_req_id = callback_data.delivery_request_id
+        crud.close_delivery_request(db, delivery_req_id)
+        sheets.record_close_deliver_req(delivery_req_id)
+        await message.answer('Ваша заявка на доставку была закрыта.', reply_markup=kb.create_main_menu_markup(message.from_user.id))
+    else:
+        await message.answer('Ошибка при закрытии заявки')
+        return
+    await state.set_state(AppState.menu)
 
 @router.callback_query(RequestCallback.filter(F.user == User.delivery), RequestCallback.filter(F.action == Action.accept))
 async def accept_request_from_delivery_kb(callback: CallbackQuery, callback_data: RequestCallback):
@@ -186,9 +206,11 @@ async def reject_request_from_delivery_kb(callback: CallbackQuery, callback_data
     await state.update_data(callback_data=callback_data)
     await state.set_state(ManageRequestState.ask_to_continue)
     
-
+    
 @router.callback_query(F.data.startswith('close_req'))
 async def close_request_kb(callback: CallbackQuery, state: FSMContext):
+    
+    
     req_data = callback.data.split(':')[1:]
     req_id = int(req_data[1])
     req_type = req_data[0]
