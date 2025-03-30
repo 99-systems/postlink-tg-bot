@@ -99,6 +99,11 @@ async def to_city(message: Message, state: FSMContext):
         data = await state.get_data()
         await state.update_data(try_count=(data.get('try_count', 0) + 1))
         await message.answer('Город не найден. Попробуйте еще раз')
+        
+@router.message(DeliverParcelState.to_city_confirmation, F.text.lower() == 'неверный адрес')
+async def to_city_retry(message: Message, state: FSMContext):
+    await message.answer('Прошу прощения, наверное, я неправильно Вас понял! Пожалуйста, отправьте название города еще раз. Убедитесь, что Вы не допустили ошибок.', reply_markup=ReplyKeyboardRemove())
+    await state.set_state(DeliverParcelState.to_city)
 
 @router.message(DeliverParcelState.to_city_confirmation, F.text.lower() == 'да')
 async def date_choose(message: Message, state: FSMContext):
