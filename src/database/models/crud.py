@@ -151,10 +151,14 @@ def create_delivery_request(db: Session, tg_id: int, from_location: str, to_loca
     db.refresh(new_request)
     return new_request
 
+
 def get_matched_requests_for_send(db: Session, send_req: SendRequest) -> list[DeliveryRequest]:
     return db.query(DeliveryRequest).filter(
         DeliveryRequest.from_location == send_req.from_location,
-        or_(DeliveryRequest.to_location == send_req.to_location, DeliveryRequest.to_location == '*'),
+        or_(
+            DeliveryRequest.to_location == send_req.to_location,
+            DeliveryRequest.to_location == '*'
+        ),
         and_(
             DeliveryRequest.from_date <= send_req.to_date,
             DeliveryRequest.to_date >= send_req.from_date

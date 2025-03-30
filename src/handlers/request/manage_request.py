@@ -1,7 +1,8 @@
 from aiogram.fsm.context import FSMContext
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
 
+from src.common.states import ManageRequestState, AppState
 from src.common import keyboard as kb
 from src.database.models import crud
 from src.database.models.request import SendRequest
@@ -99,11 +100,44 @@ async def accept_request_from_sender_kb(callback: CallbackQuery, callback_data: 
     await callback.message.answer('Ваша заявка на отправку была закрыта.', reply_markup=reply_markup)
 
 @router.callback_query(RequestCallback.filter(F.user == User.sender), RequestCallback.filter(F.action == Action.reject))
-async def reject_request_from_sender_kb(callback: CallbackQuery, callback_data: RequestCallback):    
+async def reject_request_from_sender_kb(callback: CallbackQuery, callback_data: RequestCallback, state: FSMContext):    
     
     await callback.message.delete()
-    await callback.answer('Заявка отклонена.')
-
+    await callback.answer('Жаль! Видимо, курьер не подошел по каким-либо параметрам. Тогда продолжаем поиск?', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Да')], [KeyboardButton(text='Закрыть заявку')]], resize_keyboard=True))
+    await state.update_data(reject_request_user_type='sender')
+    await state.update_data(callback_data=callback_data)
+    await state.set_state(ManageRequestState.ask_to_continue)
+    
+@router.message(ManageRequestState.ask_to_continue, F.text.lower() == 'да')
+async def handle_continue_search(message: Message, state: FSMContext):
+    state_data = await state.get_data()
+    callback_data = state_data.get('callback_data')
+    reject_request_user_type = state_data.get('reject_request_user_type')
+    
+    
+    if reject_request_user_type == 'sender':
+        send_req_id = callback_data.send_request_id
+        req = crud.get_send_request_by_id(db, send_req_id)
+        text += "\n<b>📦Заявка на поиск заказа (Посылки)</b>"
+    elif reject_request_user_type == 'delivery':
+        delivery_req_id = callback_data.delivery_request_id
+        req = crud.get_delivery_request_by_id(db, delivery_req_id)
+        text += "\n<b>📦Заявка на поиск курьера</b>"
+    
+    text += f"\n📌Номер заявки:<b>{req.id}</b>"
+    text += f"\n🛎Статус: <b>{req.status}</b>"
+    text += f"\n🛫Город отправления: <b>{req.from_location}</b>"
+    text += f"\n🛫Город назначения: <b>{req.to_location}</b>"
+    text += f"\n🗓Даты: <b>{req.from_date.strftime('%d.%m.%Y')} - {req.to_date.strftime('%d.%m.%Y')}</b>"
+    text += f"\n📊Категория: <b>{req.size_type}</b>"
+    if req.description != 'Пропустить':
+        text += f"\n📜Дополнительные примечания: <b>{req.description}</b>"
+    else:
+        text += f"\n📜Дополнительные примечания: <b>Нету</b>"
+    
+    await message.answer(f'Понял! Тогда Ваша заявка остается активной. Детали заявки:{text}', reply_markup=kb.create_main_menu_markup(message.from_user.id), parse_mode='HTML')
+    await state.set_state(AppState.menu)
+    
 
 @router.callback_query(RequestCallback.filter(F.user == User.delivery), RequestCallback.filter(F.action == Action.accept))
 async def accept_request_from_delivery_kb(callback: CallbackQuery, callback_data: RequestCallback):
@@ -143,10 +177,14 @@ async def accept_request_from_delivery_kb(callback: CallbackQuery, callback_data
     
 
 @router.callback_query(RequestCallback.filter(F.user == User.delivery), RequestCallback.filter(F.action == Action.reject))
-async def reject_request_from_delivery_kb(callback: CallbackQuery, callback_data: RequestCallback):    
+async def reject_request_from_delivery_kb(callback: CallbackQuery, callback_data: RequestCallback, state: FSMContext):    
     
     await callback.message.delete()
-    await callback.answer('Заявка отклонена.')
+    await callback.answer('Жаль! Видимо, заказ не подошел по каким-либо параметрам. Тогда продолжаем поиск?', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Да')], [KeyboardButton(text='Закрыть заявку')]], resize_keyboard=True))
+
+    await state.update_data(reject_request_user_type='delivery')
+    await state.update_data(callback_data=callback_data)
+    await state.set_state(ManageRequestState.ask_to_continue)
     
 
 @router.callback_query(F.data.startswith('close_req'))

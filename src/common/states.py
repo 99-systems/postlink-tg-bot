@@ -51,3 +51,6 @@ class DeliverParcelState(StatesGroup):
     description = State()  
     another_delivery_request = State()
     another_delivery_request_confirmation = State()
+    
+class ManageRequestState(StatesGroup):
+    ask_to_continue = State()
