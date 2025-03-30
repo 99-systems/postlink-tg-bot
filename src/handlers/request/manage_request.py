@@ -102,7 +102,7 @@ async def accept_request_from_sender_kb(callback: CallbackQuery, callback_data: 
 @router.callback_query(RequestCallback.filter(F.user == User.sender), RequestCallback.filter(F.action == Action.reject))
 async def reject_request_from_sender_kb(callback: CallbackQuery, callback_data: RequestCallback, state: FSMContext):    
     
-    await callback.answer('Жаль! Видимо, курьер не подошел по каким-либо параметрам. Тогда продолжаем поиск?', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Да')], [KeyboardButton(text='Закрыть заявку')]], resize_keyboard=True))
+    await callback.message.answer('Жаль! Видимо, курьер не подошел по каким-либо параметрам. Тогда продолжаем поиск?', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Да')], [KeyboardButton(text='Закрыть заявку')]], resize_keyboard=True))
     await callback.message.delete()
     await state.update_data(reject_request_user_type='sender')
     await state.update_data(callback_data=callback_data.to_dict())
@@ -199,7 +199,7 @@ async def accept_request_from_delivery_kb(callback: CallbackQuery, callback_data
 @router.callback_query(RequestCallback.filter(F.user == User.delivery), RequestCallback.filter(F.action == Action.reject))
 async def reject_request_from_delivery_kb(callback: CallbackQuery, callback_data: RequestCallback, state: FSMContext):    
     
-    await callback.answer('Жаль! Видимо, заказ не подошел по каким-либо параметрам. Тогда продолжаем поиск?', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Да')], [KeyboardButton(text='Закрыть заявку')]], resize_keyboard=True))
+    await callback.message.answer('Жаль! Видимо, заказ не подошел по каким-либо параметрам. Тогда продолжаем поиск?', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Да')], [KeyboardButton(text='Закрыть заявку')]], resize_keyboard=True))
     await callback.message.delete()
 
     await state.update_data(reject_request_user_type='delivery')
