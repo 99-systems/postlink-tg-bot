@@ -189,7 +189,7 @@ async def accept_request_from_delivery_kb(callback: CallbackQuery, callback_data
     if delivery_req.description != 'Пропустить':
         delivery_guy_info += f"\n📜Дополнительные примечания:</b> {delivery_req.description}"
     else:
-        delivery_guy_info += f"\n📜<b>Дополнительные примечания:</b> Нету"
+        delivery_guy_info += f"\n📜<b>Дополнительные примечания:</b> Не указаны"
     
     await bot.send_message(tg_id_of_send_req, f'<b>🎉 Поздравляем! По вашей заявке №{send_req_id} найден курьер.</b>\nВот его данные: ', reply_markup=kb.create_accept_buttons_for_sender(send_req_id, callback_data.delivery_request_id, send_req.user_id, delivery_user.id), parse_mode='HTML')    
     
