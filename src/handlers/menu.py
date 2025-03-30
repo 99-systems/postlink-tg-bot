@@ -15,7 +15,6 @@ router = Router()
 @router.message(AppState.menu, Command('start'))
 @router.message(or_f(F.text.lower() == 'меню', Command('menu')))
 async def handle_menu(message: Message, state: FSMContext):
-    await state.clear()
     await state.set_state(AppState.menu)
     state_data = await state.get_data()
     tg_user_id = state_data.get('tg_user_id', message.from_user.id)
