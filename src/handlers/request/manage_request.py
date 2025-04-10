@@ -180,18 +180,11 @@ async def accept_request_from_delivery_kb(callback: CallbackQuery, callback_data
     # Request is open, proceed with matching
     tg_id_of_send_req = send_req.user.telegram_user.telegram
     delivery_user = crud.get_user_by_id(db, callback_data.delivering_user_id)
+    delivery_request = crud.get_delivery_request_by_id(db, callback_data.delivery_request_id)
     
-    delivery_req_id = callback_data.delivery_request_id
-    delivery_req = crud.get_delivery_request_by_id(db, delivery_req_id)
+    delivery_data = f"<b>🛫Город отправления:</b> {delivery_request.from_location}\n<b>🛫Город назначения:</b> {delivery_request.to_location}<b>🗓Даты:</b> {delivery_request.from_date.strftime("%d.%m.%Y")} - {delivery_request.to_date.strftime("%d.%m.%Y")}\n<b>📊Категория посылки:</b>{delivery_request.size_type}\n<b>📜Дополнительные примечания:</b>{delivery_request.description if delivery_request.description != 'Пропустить' else 'Нет'}"
     
-    delivery_guy_info = f"🛫<b>Город отправления:</b> {delivery_req.from_location}\n🛫<b>Город назначения:</b> {delivery_req.to_location}\n🗓<b>Даты:</b> {delivery_req.from_date.strftime('%d.%m.%Y')} - {delivery_req.to_date.strftime('%d.%m.%Y')}\n📊<b>Категория посылки:</b> {delivery_req.size_type}"
-    
-    if delivery_req.description != 'Пропустить':
-        delivery_guy_info += f"\n📜Дополнительные примечания:</b> {delivery_req.description}"
-    else:
-        delivery_guy_info += f"\n📜<b>Дополнительные примечания:</b> Не указаны"
-    
-    await bot.send_message(tg_id_of_send_req, f'<b>🎉 Поздравляем! По вашей заявке №{send_req_id} найден курьер.</b>\nВот его данные: ', reply_markup=kb.create_accept_buttons_for_sender(send_req_id, callback_data.delivery_request_id, send_req.user_id, delivery_user.id), parse_mode='HTML')    
+    await bot.send_message(tg_id_of_send_req, f'<b>🎉 Поздравляем! По вашей заявке №{send_req_id} найден курьер.</b>\nВот его данные:\n{delivery_data}', reply_markup=kb.create_accept_buttons_for_sender(send_req_id, callback_data.delivery_request_id, send_req.user_id, delivery_user.id))    
     
     await callback.message.answer('Ваше предложение принято и отправлено отправителю. Ожидайте его ответа. В случае одобрения заявки вы получите сообщение с контактными данными отправителя.', reply_markup=reply_markup)
     await callback.answer()
