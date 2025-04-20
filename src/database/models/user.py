@@ -7,9 +7,9 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    phone = Column(String, nullable=False, unique=True)
+    phone = Column(String, nullable=True, unique=True)
     name = Column(String, nullable=False)
-    city = Column(String, nullable=False)
+    city = Column(String, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))  
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
@@ -25,8 +25,8 @@ class TelegramUser(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     telegram = Column(BigInteger, unique=True, nullable=False, index=True)
-    username = Column(String, nullable=True)
-
+    username = Column(String, nullable=True),
+    image = Column(String, nullable=True),
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="telegram_user", uselist=False)
