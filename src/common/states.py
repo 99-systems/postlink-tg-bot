@@ -54,3 +54,7 @@ class DeliverParcelState(StatesGroup):
     
 class ManageRequestState(StatesGroup):
     ask_to_continue = State()
+
+    
+class ChatState(StatesGroup):
+    messaging = State()

@@ -18,7 +18,7 @@ async def run():
     # auth_handler.router.message.middleware.register(NotAuthMiddlewareMessage()) #проверяет на залогиненного пользователя и он больше не зайти в авторизовацию
     
     menu_handler.router.message.middleware.register(LogMiddleware())
-    menu_handler.router.message.middleware.register(AuthMiddlewareMessage())
+    # menu_handler.router.message.middleware.register(AuthMiddlewareMessage())
     
     send_request_handler.router.message.middleware(OpenRequestMessageMiddleware()) #проверяет на наличие открытой заявки
     # send_request_handler.router.callback_query.middleware(OpenRequestCallbackMiddleware()) #проверяет на наличие открытой заявки
@@ -40,7 +40,7 @@ async def run():
     )
 
     dp.include_routers(
-        auth_handler.router,
+        # auth_handler.router,
         main_handler.router,
     )
 

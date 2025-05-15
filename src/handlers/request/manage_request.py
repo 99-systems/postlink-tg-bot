@@ -2,7 +2,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
 
-from src.common.states import ManageRequestState, AppState
+from src.common.states import ManageRequestState, AppState, ChatState
 from src.common import keyboard as kb
 from src.database.models import crud
 from src.database.models.request import SendRequest
@@ -11,7 +11,6 @@ from src.database import db
 from src.services import sheets
 from src.bot import bot
 from src.handlers import menu
-
 
 router = Router()
 
@@ -57,7 +56,7 @@ async def close_request(message: Message, state: FSMContext):
 from .callbacks import RequestCallback, Action, User
 
 @router.callback_query(RequestCallback.filter(F.user == User.sender), RequestCallback.filter(F.action == Action.accept))
-async def accept_request_from_sender_kb(callback: CallbackQuery, callback_data: RequestCallback):
+async def accept_request_from_sender_kb(callback: CallbackQuery, callback_data: RequestCallback, state: FSMContext):
     
     
     await callback.message.delete()
@@ -83,7 +82,7 @@ async def accept_request_from_sender_kb(callback: CallbackQuery, callback_data: 
     
     await bot.send_message(delivery_user.telegram_user.telegram, f'Отправитель принял ваше предложение. Свяжитесь с ним для уточнения деталей доставки.\n{sender_contact_info}')
     await bot.send_message(delivery_user.telegram_user.telegram, 'Ваша заявка на доставку была закрыта.', reply_markup=reply_markup)
-    
+
     delivery_user_contact_info = "Контакты курьера:\n"
     if delivery_user.name:
         delivery_user_contact_info += f"Контактное имя: {delivery_user.name}\n"
@@ -96,6 +95,7 @@ async def accept_request_from_sender_kb(callback: CallbackQuery, callback_data: 
     crud.close_send_request(db, callback_data.send_request_id)
     sheets.record_close_send_req(callback_data.send_request_id)
     reply_markup = kb.create_main_menu_markup(callback.from_user.id)
+
     await callback.message.answer(f'Ваше предложение принято. Свяжитесь с курьером для уточнения деталей доставки.\n{delivery_user_contact_info}')
     await callback.message.answer('Ваша заявка на отправку была закрыта.', reply_markup=reply_markup)
 
@@ -182,7 +182,7 @@ async def accept_request_from_delivery_kb(callback: CallbackQuery, callback_data
     delivery_user = crud.get_user_by_id(db, callback_data.delivering_user_id)
     delivery_request = crud.get_delivery_request_by_id(db, callback_data.delivery_request_id)
     
-    delivery_data = f"<b>🛫Город отправления:</b> {delivery_request.from_location}\n<b>🛫Город назначения:</b> {delivery_request.to_location}<b>🗓Даты:</b> {delivery_request.from_date.strftime("%d.%m.%Y")} - {delivery_request.to_date.strftime("%d.%m.%Y")}\n<b>📊Категория посылки:</b>{delivery_request.size_type}\n<b>📜Дополнительные примечания:</b>{delivery_request.description if delivery_request.description != 'Пропустить' else 'Нет'}"
+    delivery_data = f"<b>🛫Город отправления:</b> {delivery_request.from_location}\n<b>🛫Город назначения:</b> {delivery_request.to_location}<b>🗓Даты:</b> {delivery_request.from_date.strftime('%d.%m.%Y')} - {delivery_request.to_date.strftime('%d.%m.%Y')}\n<b>📊Категория посылки:</b>{delivery_request.size_type}\n<b>📜Дополнительные примечания:</b>{delivery_request.description if delivery_request.description != 'Пропустить' else 'Нет'}"
     
     await bot.send_message(tg_id_of_send_req, f'<b>🎉 Поздравляем! По вашей заявке №{send_req_id} найден курьер.</b>\nВот его данные:\n{delivery_data}', reply_markup=kb.create_accept_buttons_for_sender(send_req_id, callback_data.delivery_request_id, send_req.user_id, delivery_user.id))    
     
