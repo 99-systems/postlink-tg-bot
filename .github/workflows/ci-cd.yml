@@ -46,7 +46,9 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            CONTAINER_NAME=tg-postlink-bot-${BRANCH}
+            BRANCH=${BRANCH:-${{ github.ref_name || github.event.inputs.environment }}}
+            IMAGE_ID=ghcr.io/${{ github.repository }}-$BRANCH:latest
+            CONTAINER_NAME=tg-postlink-bot-$BRANCH
 
             docker login ghcr.io -u ${{ github.actor }} --password-stdin <<< "${{ secrets.GITHUB_TOKEN }}"
             docker pull $IMAGE_ID
