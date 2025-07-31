@@ -62,6 +62,8 @@ jobs:
               MONGO_USER=${{ secrets.PROD_MONGO_USER }}
               MONGO_DB_NAME=${{ secrets.PROD_MONGO_DB_NAME }}
               MONGO_PASSWORD=${{ secrets.PROD_MONGO_PASSWORD }}
+              OTP_SERVICE_URL=${{ secrets.PROD_OTP_SERVICE_URL }}
+              OTP_API_KEY=${{ secrets.PROD_OTP_SERVICE_API_KEY }}
               DEBUG="False"
             else
               BOT_TOKEN=${{ secrets.DEV_BOT_TOKEN }}
@@ -70,6 +72,8 @@ jobs:
               MONGO_USER=${{ secrets.DEV_MONGO_USER }}
               MONGO_DB_NAME=${{ secrets.DEV_MONGO_DB_NAME }}
               MONGO_PASSWORD=${{ secrets.DEV_MONGO_PASSWORD }}
+              OTP_SERVICE_URL=${{ secrets.DEV_OTP_SERVICE_URL }}
+              OTP_API_KEY=${{ secrets.DEV_OTP_SERVICE_API_KEY }}
               DEBUG="True"
             fi
 
@@ -92,5 +96,7 @@ jobs:
               -e MONGO_HOST="${{ secrets.MONGO_HOST }}" \
               -e GOOGLE_SHEETS_API_KEY="${{ secrets.GOOGLE_SHEETS_API_KEY }}" \
               -e SERVICE_ACCOUNT_CREDS='${{ secrets.SERVICE_ACCOUNT_CREDS_JSON }}' \
+              -e OTP_SERVICE_URL="$OTP_SERVICE_URL" \
+              -e OTP_SERVICE_API_KEY="$OTP_API_KEY" \
               -e DEBUG="$DEBUG" \
               $IMAGE_ID
