@@ -38,8 +38,19 @@ async def run():
         support_handler.router,
         menu_handler.router
     )
+ # Create a global support router that has highest priority
+    global_support_router = Router()
+    
+    @global_support_router.message(F.text.lower() == 'служба поддержки')
+    async def handle_global_support(message: Message, state: FSMContext):
+        from src.common.states import SupportState
+        from src.common import keyboard as kb
+        await message.answer('Привет! Это служба поддержки PostLink.\nПожалуйста, ответьте на несколько вопросов, и мы сделаем все, что в наших силах!', reply_markup=ReplyKeyboardRemove())
+        await message.answer('Выберите, кто Вы сейчас⬇️', reply_markup=kb.user_type_reply_mu)
+        await state.set_state(SupportState.user_type)
 
     dp.include_routers(
+        global_support_router,  # This router has highest priority
         auth_handler.router,
         main_handler.router,
     )
