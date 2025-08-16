@@ -6,7 +6,6 @@ from src.database import db
 from src.database.models import crud
 from src.database.models.request import SendRequest
 from src.common.states import SupportState
-from src.handlers import menu
 from src.services import supp_request_sender as supp_serv
 
 
@@ -32,7 +31,12 @@ async def handle_unknown_problem(message: Message, state: FSMContext):
     
 @router.message(SupportState.user_type, F.text.lower() == 'назад')
 async def back_to_menu(message: Message, state: FSMContext):
-    await menu.handle_menu(message, state)
+    simple_kb = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text='Служба поддержки')]],
+        resize_keyboard=True
+    )
+    await message.answer('Главное меню', reply_markup=simple_kb)
+    await state.clear()
 
 @router.message(SupportState.problem_description)
 async def handle_other_problem_description(message: Message, state: FSMContext):
@@ -93,4 +97,9 @@ async def handle_confirmation(message: Message, state: FSMContext):
     await supp_serv.send_supp_request(support_request)
     
     await message.answer('✅ Спасибо! Мы получили вашу заявку и свяжемся с вами в ближайшее время.')
-    await menu.handle_menu(message, state)
+    simple_kb = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text='Служба поддержки')]],
+        resize_keyboard=True
+    )
+    await message.answer('Главное меню', reply_markup=simple_kb)
+    await state.clear()

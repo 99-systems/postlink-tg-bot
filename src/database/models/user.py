@@ -25,8 +25,8 @@ class TelegramUser(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     telegram = Column(BigInteger, unique=True, nullable=False, index=True)
-    username = Column(String, nullable=True),
-    image = Column(String, nullable=True),
+    username = Column(String, nullable=True)
+    image = Column(String, nullable=True)
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="telegram_user", uselist=False)

@@ -1,7 +1,7 @@
 from aiogram.fsm.context import FSMContext
 from aiogram import Router, F
 from aiogram.filters import Command
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.types import Message, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
 
 from src.common.states import SupportState
 from src.common import keyboard as kb
@@ -11,7 +11,11 @@ router = Router()
 
 @router.message(Command("start"))
 async def start(message: Message, state: FSMContext):
-    await message.answer('Приступим к работе!')
+    simple_kb = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text='Служба поддержки')]],
+        resize_keyboard=True
+    )
+    await message.answer('Приступим к работе!', reply_markup=simple_kb)
 
 
 
