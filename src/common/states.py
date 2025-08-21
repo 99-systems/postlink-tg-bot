@@ -7,7 +7,6 @@ class SupportState(StatesGroup):
     user_type = State()
     problem = State()
     problem_description = State()
-    request_no = State()
-    confirmation = State()
+    # confirmation = State()
     
 

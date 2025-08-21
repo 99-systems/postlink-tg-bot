@@ -41,65 +41,46 @@ async def back_to_menu(message: Message, state: FSMContext):
 @router.message(SupportState.problem_description)
 async def handle_other_problem_description(message: Message, state: FSMContext):
     await state.update_data(problem_description=message.text)
-    await message.answer('Укажите номер заявки, по которому возникла проблема\n(Номер заявки можно найти в сообщении, подтверждающем создание заявки)', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Проблема не связана с какой-либо из заявок')]], resize_keyboard=True))
-    await state.set_state(SupportState.request_no)
-    
 
-@router.message(SupportState.request_no, F.text.func(str.isdigit))
-async def handle_request_no(message: Message, state: FSMContext):
-    await state.update_data(request_no=message.text)
-    
     state_data = await state.get_data()
-    user_type = state_data['user_type']
-    request_data = None
-    
-    if user_type == 'отправитель':
-        request_data = crud.get_send_request_by_id(db, message.text)
-    else:
-        request_data = crud.get_delivery_request_by_id(db, message.text)
-        
-    if not request_data:
-        await message.answer('Неверный номер заявки. Пожалуйста, уточните номер заявки, по которой возникла проблема, и отправьте его повторно.', reply_markup=ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Проблема не связана с какой-либо из заявок')]], resize_keyboard=True))
-        return
-    
-    type_of_request = 'send' if isinstance(request_data, SendRequest) else 'delivery'
-    
-    text = f'''У вас возникла проблема по данной заявке?'''
-    text += f'\n\n📦<b>Заявка на поиск курьера</b>\n' if type_of_request == 'send' else f'\n\n📦<b>Заявка на поиск заказа (Посылки)</b>\n'
-    text += f'📌Номер заявки {request_data.id}\n🛎Статус: <b>{request_data.status}</b>\n🛫Город отправления: <b>{request_data.from_location}</b>\n🛫Город назначения: <b>{request_data.to_location}</b>'
-    text += f'\n🗓Даты: <b>{request_data.from_date.strftime("%d.%m.%Y")} - {request_data.to_date.strftime("%d.%m.%Y")}</b>\n📊Категория: <b>{request_data.size_type}</b>'
-    if request_data.description != 'Пропустить':
-        text += f'\n📜Дополнительные примечания: <b>{request_data.description}</b>'
-    else:
-        text += f'\n📜Дополнительные примечания: <b>Нету</b>'
-    await message.answer(text, reply_markup=kb.confirmation_reply_mu, parse_mode='HTML')
-    await state.set_state(SupportState.confirmation)
-    
-@router.message(SupportState.request_no, F.text.lower() == 'проблема не связана с какой-либо из заявок')
-async def handle_no_request_related_problem(message: Message, state: FSMContext):
-    await state.update_data(request_no=None)
-    await handle_confirmation(message, state)
 
-@router.message(SupportState.request_no)
-async def handle_invalid_request_no(message: Message, state: FSMContext):
-    await message.answer('Пожалуйста, введите номер заявки в числовом формате')
-    
-@router.message(SupportState.confirmation, F.text.lower().in_(['да', 'нет']))
-async def handle_confirmation(message: Message, state: FSMContext):
-    if message.text.lower() == 'нет':
-        await message.answer('Прошу перепроверить номер заявки, по которому у Вас возникла проблема и повторно отправить.', reply_markup=ReplyKeyboardRemove())
-        await state.set_state(SupportState.request_no)
-        return
-    
-    state_data = await state.get_data()
-    
-    support_request = crud.create_supp_request(db, message.from_user.id, state_data['problem_description'], state_data['user_type'], state_data['request_no'])
+    await message.answer(
+        '✅ Спасибо! Мы получили вашу заявку и свяжемся с вами в ближайшее время.',
+        reply_markup=ReplyKeyboardRemove()
+    )
+    support_request = crud.create_supp_request(
+        db,
+        message.from_user.id,
+        state_data['problem_description'],
+        state_data['user_type'],
+    )
     await supp_serv.send_supp_request(support_request)
-    
-    await message.answer('✅ Спасибо! Мы получили вашу заявку и свяжемся с вами в ближайшее время.')
+
     simple_kb = ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text='Служба поддержки')]],
         resize_keyboard=True
     )
     await message.answer('Главное меню', reply_markup=simple_kb)
     await state.clear()
+
+    # await state.set_state(SupportState.confirmation)
+
+#
+# @router.message(SupportState.confirmation)
+# async def handle_confirmation(message: Message, state: FSMContext):
+#     state_data = await state.get_data()
+#
+#     support_request = crud.create_supp_request(
+#         db,
+#         message.from_user.id,
+#         state_data['problem_description'],
+#         state_data['user_type'],
+#     )
+#     await supp_serv.send_supp_request(support_request)
+#
+#     simple_kb = ReplyKeyboardMarkup(
+#         keyboard=[[KeyboardButton(text='Служба поддержки')]],
+#         resize_keyboard=True
+#     )
+#     await message.answer('Главное меню', reply_markup=simple_kb)
+#     await state.clear()

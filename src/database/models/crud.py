@@ -114,7 +114,7 @@ def get_tg_user_by_tg_id(db: Session, tg_id: int):
     return db.query(TelegramUser).filter(TelegramUser.telegram == tg_id).first()
     
 
-def create_supp_request(db: Session, tg_id: int, message: str, req_type = None, req_id = None) -> SupportRequest:
+def create_supp_request(db: Session, tg_id: int, message: str, req_type = None) -> SupportRequest:
     user = get_user_by_tg_id(db, tg_id)
     tg_user = get_tg_user_by_tg_id(db, tg_id)
     
@@ -123,7 +123,6 @@ def create_supp_request(db: Session, tg_id: int, message: str, req_type = None, 
             user_id=user.id,    
             telegram_user=tg_user,
             req_type=req_type,
-            req_id=req_id,
             message=message
         )
     else:
@@ -131,7 +130,6 @@ def create_supp_request(db: Session, tg_id: int, message: str, req_type = None, 
             user_id=None,
             telegram_user=tg_user,
             req_type=req_type,
-            req_id=req_id,
             message=message
         )
     db.add(new_request)

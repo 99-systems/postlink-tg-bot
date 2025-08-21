@@ -29,7 +29,6 @@ async def send_supp_request(supp_req: SupportRequest):
         else:
             text = 'Поступила новая заявка на поддержку от неизвестного пользователя.'
 
-    text += f'\nНомер заявки: {supp_req.id}'
     text += f'\nТекст заявки: {supp_req.message}'
 
 
