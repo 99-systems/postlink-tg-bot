@@ -1,7 +1,8 @@
 from aiogram.fsm.context import FSMContext
 from aiogram import Router, F
 from aiogram.filters import Command
-from aiogram.types import Message, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton, CallbackQuery
+from aiogram.types import Message, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from src.common.states import SupportState
 from src.common import keyboard as kb
@@ -15,6 +16,16 @@ async def start(message: Message, state: FSMContext):
         keyboard=[[KeyboardButton(text='Служба поддержки')]],
         resize_keyboard=True
     )
+    # --- Inline keyboard for the web-app button ---
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(
+            text='Открыть PostLink',
+            web_app={'url': 'https://backend.sdutalks.kz'}
+        )
+    )
+    inline_kb = builder.as_markup()
+    # ---------------------------------------------
     welcome_message = (
         "Добро пожаловать в <b>PostLink</b> 👋\n\n"
         "PostLink — это сервис, который соединяет отправителей и путешественников.\n"
@@ -28,7 +39,10 @@ async def start(message: Message, state: FSMContext):
     )
 
     await message.answer(welcome_message, reply_markup=simple_kb, parse_mode="HTML")
-
+    await message.answer(
+        "👆🏻 Нажмите кнопку ниже, чтобы открыть PostLink:",
+        reply_markup=inline_kb           # InlineKeyboardMarkup
+    )
 
 
 
