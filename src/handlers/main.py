@@ -12,17 +12,15 @@ router = Router()
 
 @router.message(Command("start"))
 async def start(message: Message, state: FSMContext):
-    # Reply keyboard (persistent, appears in the input field)
-    simple_kb = ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text='Служба поддержки')]],
-        resize_keyboard=True
-    )
-
-    # Inline keyboard (inline button under the message)
+    # Inline keyboard for the web-app button
     inline_kb = (
         InlineKeyboardBuilder()
-        .row(InlineKeyboardButton(text='Открыть PostLink',
-                                  web_app={'url': 'https://backend.sdutalks.kz'}))
+        .row(
+            InlineKeyboardButton(
+                text="Открыть PostLink",
+                web_app={"url": "https://backend.sdutalks.kz"}
+            )
+        )
         .as_markup()
     )
 
@@ -38,12 +36,19 @@ async def start(message: Message, state: FSMContext):
         "🚀 Всё просто: открой приложение и проверь всё сам 👇🏻"
     )
 
-    # One message: welcome text + inline button + reply keyboard
-    await message.answer(
-        welcome_message,
-        parse_mode="HTML",
-        reply_markup=inline_kb   # ← inline keyboard under the message
+    # 1) Welcome + inline button
+    await message.answer(welcome_message, parse_mode="HTML", reply_markup=inline_kb)
+
+    # 2) Quick hint + reply keyboard
+    simple_kb = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text="Служба поддержки")]],
+        resize_keyboard=True
     )
+    await message.answer(
+        "Если нужна помощь — нажми «Служба поддержки» ниже:",
+        reply_markup=simple_kb
+    )
+
 
 
 @router.message(Command("support"))
