@@ -129,3 +129,6 @@ def get_all_req_ids_by_user(db: Session, user: User) -> dict:
         "send": [req.id for req in send_reqs],
         "delivery": [req.id for req in delivery_reqs]
     }
+
+def get_all_requests(db: Session) -> list:
+    return db.query(SendRequest).all() + db.query(DeliveryRequest).all()
