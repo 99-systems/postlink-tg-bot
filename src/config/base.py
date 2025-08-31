@@ -22,6 +22,7 @@ class Config:
     GOOGLE_SHEETS_API_KEY = os.getenv('GOOGLE_SHEETS_API_KEY')
     REQUESTS_CHAT_ID = os.getenv('REQUESTS_CHAT_ID')
     SERVICE_ACCOUNT_CREDS = os.getenv('SERVICE_ACCOUNT_CREDS')
+    ADMINS = os.getenv('ADMINS')
 
 config = Config()
 
