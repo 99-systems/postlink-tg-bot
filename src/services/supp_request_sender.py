@@ -1,4 +1,5 @@
 
+import logging
 from src.database.models.support_req import SupportRequest
 from src.database.models import crud
 from src.database.connection import db
@@ -10,9 +11,12 @@ import src.common.keyboard as kb
 import asyncio
 from src.config import config
 
+logging.basicConfig(level=logging.INFO)
+
 
 async def send_supp_request(supp_req: SupportRequest):
     chat_id = config.SUPPORT_CHAT_ID
+    logging.info(f"Attempting to send support request to chat_id: {chat_id}")
     
     user = None
     if supp_req.user:
@@ -46,7 +50,12 @@ async def send_supp_request(supp_req: SupportRequest):
         text += ', '.join([str(i) for i in send_ids]) if send_ids else 'Отсутствуют'
         
         delivery_ids = reqs['delivery']
-        text += f'\nНа доставку: ' 
+        text += f'\nНа доставку: '
         text += ', '.join([str(i) for i in delivery_ids]) if delivery_ids else 'Отсутствуют'
 
-    await bot.send_message(chat_id, text, parse_mode='HTML')
+    logging.info(f"Support request text: {text}")
+    try:
+        await bot.send_message(chat_id, text, parse_mode='HTML')
+        logging.info("Support request sent successfully.")
+    except Exception as e:
+        logging.error(f"Error sending support request: {e}")

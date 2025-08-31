@@ -64,7 +64,7 @@ jobs:
               MONGO_PASSWORD=${{ secrets.PROD_MONGO_PASSWORD }}
               OTP_SERVICE_URL=${{ secrets.PROD_OTP_SERVICE_URL }}
               OTP_API_KEY=${{ secrets.PROD_OTP_SERVICE_API_KEY }}
-              DEBUG="False"
+              DEBUG=${{ secrets.PROD_DEBUG }}
             else
               BOT_TOKEN=${{ secrets.DEV_BOT_TOKEN }}
               DB_NAME=${{ secrets.DEV_DB_NAME }}
@@ -74,7 +74,7 @@ jobs:
               MONGO_PASSWORD=${{ secrets.DEV_MONGO_PASSWORD }}
               OTP_SERVICE_URL=${{ secrets.DEV_OTP_SERVICE_URL }}
               OTP_API_KEY=${{ secrets.DEV_OTP_SERVICE_API_KEY }}
-              DEBUG="True"
+              DEBUG=${{ secrets.DEBUG }}
             fi
 
             docker run -d \
