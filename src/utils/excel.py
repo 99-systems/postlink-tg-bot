@@ -3,14 +3,12 @@ from openpyxl import load_workbook
 from openpyxl.styles import Alignment
 from openpyxl.utils import get_column_letter
 
-from src.database.connection import get_db
+from src.database.connection import db
 from src.database.models import crud
 from src.database.models.request import SendRequest, DeliveryRequest
 
-
 def generate_excel_file():
-    with get_db() as db:
-        requests = crud.get_all_requests(db)
+    requests = crud.get_all_requests(db)
 
     if not requests:
         print("No data found in the database.")
