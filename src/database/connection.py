@@ -1,7 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 import logging
-from contextlib import contextmanager
 from src.config import config
 
 
@@ -16,17 +15,8 @@ Base = declarative_base()
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
-@contextmanager
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-        db.commit()
-    except Exception:
-        db.rollback()
-        raise
-    finally:
-        db.close()
+db = SessionLocal()
+
 
 def init_db():
     """Создаёт таблицы, если их нет"""

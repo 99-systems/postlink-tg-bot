@@ -13,11 +13,14 @@ from .request import SendRequest, DeliveryRequest
 def create_session(db: Session, user_id: int) -> TgSession: 
     new_session = TgSession(user_id=user_id)
     db.add(new_session)
+    db.commit()
+    db.refresh(new_session)
     return new_session
 
 def delete_session(db: Session, user_id: int):
     session = db.query(TgSession).filter(TgSession.user_id == user_id).first()
     db.delete(session)
+    db.commit()
 
 def get_session_by_tg_id(db: Session, tg_id: str) -> Optional[TgSession]:
     tg_user = db.query(TelegramUser).filter(TelegramUser.telegram == str(tg_id)).first()
@@ -29,6 +32,7 @@ def get_session_by_tg_id(db: Session, tg_id: str) -> Optional[TgSession]:
 def set_user_id_for_tg_user(db: Session, tg_id: int, user_id: int):
     tg_user = db.query(TelegramUser).filter(TelegramUser.telegram == tg_id).first()
     tg_user.user_id = user_id
+    db.commit()
     
 
 def create_user(db: Session, phone: str, name: str, city: str) -> User:
@@ -41,6 +45,8 @@ def create_user(db: Session, phone: str, name: str, city: str) -> User:
     )
     
     db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
     
     return new_user
 
@@ -61,12 +67,15 @@ def add_user_telegram(db: Session, user_id: int, tg_id: int, username: str = Non
 
     telegram_user = TelegramUser(user_id=user.id, telegram=tg_id, username=username)
     db.add(telegram_user)
+    db.commit()
+    db.refresh(telegram_user)
     
     return user
 
 def delete_user_telegram(db: Session, tg_id: int):
     tg_user = db.query(TelegramUser).filter(TelegramUser.telegram == tg_id).first()
     db.delete(tg_user)
+    db.commit()
 
 def get_users(db: Session) -> list[User]:
     return db.query(User).all()
@@ -83,6 +92,8 @@ def get_user_by_tg_id(db: Session, tg_id: int) -> User:
 def add_tg_user(db, tg_id: int, username: str = None):
     new_tg_user = TelegramUser(telegram=tg_id, username=username)
     db.add(new_tg_user)
+    db.commit()
+    db.refresh(new_tg_user)
 
     return new_tg_user
 
@@ -92,6 +103,11 @@ def get_tg_user(db: Session, tg_id: int) -> TelegramUser:
 def accept_terms(db: Session, tg_id: int):
     tg_user = get_tg_user(db, tg_id)
     tg_user.accepted_terms = True
+    db.commit()
+
+
+
+
 
 
 def get_tg_user_by_tg_id(db: Session, tg_id: int):
@@ -117,15 +133,10 @@ def create_supp_request(db: Session, tg_id: int, message: str, req_type = None) 
             message=message
         )
     db.add(new_request)
+    db.commit()
+    db.refresh(new_request)
     return new_request
 
 def get_user_from_supp_req(db: Session, supp_req: SupportRequest) -> User:
     return supp_req.user
 
-def get_all_req_ids_by_user(db: Session, user: User) -> dict:
-    send_reqs = db.query(SendRequest).filter(SendRequest.user_id == user.id).all()
-    delivery_reqs = db.query(DeliveryRequest).filter(DeliveryRequest.user_id == user.id).all()
-    return {
-        "send": [req.id for req in send_reqs],
-        "delivery": [req.id for req in delivery_reqs]
-    }
