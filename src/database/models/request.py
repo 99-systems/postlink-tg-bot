@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, BigInteger
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from src.database.connection import Base
@@ -6,11 +6,11 @@ from src.database.connection import Base
 class SendRequest(Base):
     __tablename__ = "send_requests"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     from_location = Column(String, nullable=False) 
     to_location = Column(String, nullable=False)
     
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     user = relationship("User", back_populates="send_requests")
 
     from_date = Column(DateTime, nullable=False)  
@@ -27,11 +27,11 @@ class SendRequest(Base):
 class DeliveryRequest(Base):
     __tablename__ = "delivery_requests"
     
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     from_location = Column(String, nullable=False)  
     to_location = Column(String, nullable=False)
 
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     user = relationship("User", back_populates="delivery_requests")
 
     from_date = Column(DateTime, nullable=False)  

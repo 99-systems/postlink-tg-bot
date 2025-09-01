@@ -6,7 +6,7 @@ from src.database.connection import Base
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     phone = Column(String, nullable=True, unique=True)
     name = Column(String, nullable=False)
     city = Column(String, nullable=True)
@@ -23,12 +23,12 @@ class User(Base):
 class TelegramUser(Base):
     __tablename__ = "telegram_users" 
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     telegram = Column(BigInteger, unique=True, nullable=False, index=True)
     username = Column(String, nullable=True)
     image = Column(String, nullable=True)
 
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    user_id = Column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="telegram_user", uselist=False)
     support_requests = relationship("SupportRequest", back_populates="telegram_user", cascade="all, delete-orphan")
 
@@ -36,8 +36,8 @@ class TelegramUser(Base):
 class AccessUser(Base):
     __tablename__ = "access_users"
     
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     role = Column(String, nullable=False, index=True)
 
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    user_id = Column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="access_user", uselist=False)
