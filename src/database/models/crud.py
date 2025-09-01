@@ -121,14 +121,14 @@ def create_supp_request(db: Session, tg_id: int, message: str, req_type = None) 
     if user:
         new_request = SupportRequest(
             user_id=user.id,    
-            telegram_user_id=tg_user.id,
+            telegram_user=tg_user,
             req_type=req_type,
             message=message
         )
     else:
         new_request = SupportRequest(
             user_id=None,
-            telegram_user_id=tg_user.id,
+            telegram_user=tg_user,
             req_type=req_type,
             message=message
         )
