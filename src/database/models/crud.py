@@ -121,14 +121,14 @@ def create_supp_request(db: Session, tg_id: int, message: str, req_type = None) 
     if user:
         new_request = SupportRequest(
             user_id=user.id,    
-            telegram_user=tg_user,
+            telegram_user_id=tg_user.id,
             req_type=req_type,
             message=message
         )
     else:
         new_request = SupportRequest(
             user_id=None,
-            telegram_user=tg_user,
+            telegram_user_id=tg_user.id,
             req_type=req_type,
             message=message
         )
@@ -139,4 +139,13 @@ def create_supp_request(db: Session, tg_id: int, message: str, req_type = None) 
 
 def get_user_from_supp_req(db: Session, supp_req: SupportRequest) -> User:
     return supp_req.user
+
+def get_all_req_ids_by_user(db: Session, user: User) -> dict:
+    send_requests = db.query(SendRequest).filter(SendRequest.user_id == user.id).all()
+    delivery_requests = db.query(DeliveryRequest).filter(DeliveryRequest.user_id == user.id).all()
+    
+    return {
+        'send': [req.id for req in send_requests],
+        'delivery': [req.id for req in delivery_requests]
+    }
 
