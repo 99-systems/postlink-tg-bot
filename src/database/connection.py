@@ -15,6 +15,22 @@ Base = declarative_base()
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
+from contextlib import contextmanager
+
+@contextmanager
+def get_db():
+    """Context manager for database sessions"""
+    db = SessionLocal()
+    try:
+        yield db
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        db.close()
+
+# Global session for backward compatibility
 db = SessionLocal()
 
 

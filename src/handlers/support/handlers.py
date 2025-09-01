@@ -3,7 +3,7 @@ from aiogram.types import Message, ReplyKeyboardRemove, ReplyKeyboardMarkup, Key
 from aiogram.fsm.context import FSMContext
 from aiogram import F
 
-from src.database import db
+from src.database.connection import get_db
 from src.database.models import crud
 from src.database.models.request import SendRequest
 from src.common.states import SupportState
@@ -58,14 +58,15 @@ async def handle_other_problem_description(message: Message, state: FSMContext):
     )
     try:
         logging.info(f"Creating support request for user {message.from_user.id} with data: {state_data}")
-        support_request = crud.create_supp_request(
-            db,
-            message.from_user.id,
-            state_data['problem_description'],
-            state_data['user_type'],
-        )
-        logging.info(f"Support request {support_request.id} created successfully.")
-        await supp_serv.send_supp_request(support_request)
+        with get_db() as db:
+            support_request = crud.create_supp_request(
+                db,
+                message.from_user.id,
+                state_data['problem_description'],
+                state_data['user_type'],
+            )
+            logging.info(f"Support request {support_request.id} created successfully.")
+            await supp_serv.send_supp_request(support_request)
     except Exception as e:
         logging.error(f"Error creating or sending support request for user {message.from_user.id}: {e}")
 
