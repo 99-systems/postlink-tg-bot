@@ -137,6 +137,9 @@ def create_supp_request(db: Session, tg_id: int, message: str, req_type = None) 
     db.refresh(new_request)
     return new_request
 
+def get_supp_request_by_id(db: Session, supp_req_id: int) -> Optional[SupportRequest]:
+    return db.query(SupportRequest).filter(SupportRequest.id == supp_req_id).first()
+
 def get_user_from_supp_req(db: Session, supp_req: SupportRequest) -> User:
     return supp_req.user
 

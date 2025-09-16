@@ -10,12 +10,16 @@ import asyncio
 from src.config import config
 
 
-async def send_supp_request(supp_req: SupportRequest):
+async def send_supp_request(supp_req_id: int):
     chat_id = config.SUPPORT_CHAT_ID
 
-    user = None
-    if supp_req.user:
-        with get_db() as db:
+    with get_db() as db:
+        supp_req = crud.get_supp_request_by_id(db, supp_req_id)
+        if not supp_req:
+            return
+
+        user = None
+        if supp_req.user:
             user = crud.get_user_by_tg_id(db, supp_req.user.telegram_user.telegram)
     
     if user:

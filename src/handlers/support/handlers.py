@@ -66,7 +66,7 @@ async def handle_other_problem_description(message: Message, state: FSMContext):
                 state_data['user_type'],
             )
             logging.info(f"Support request {support_request.id} created successfully.")
-            await supp_serv.send_supp_request(support_request)
+            await supp_serv.send_supp_request(support_request.id)
     except Exception as e:
         logging.error(f"Error creating or sending support request for user {message.from_user.id}: {e}")
 
