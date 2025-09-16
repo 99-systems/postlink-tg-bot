@@ -1,6 +1,6 @@
 from src.database.models.support_req import SupportRequest
 from src.database.models import crud
-from src.database.connection import db
+from src.database.connection import get_db
 
 
 from src.bot import bot
@@ -12,10 +12,11 @@ from src.config import config
 
 async def send_supp_request(supp_req: SupportRequest):
     chat_id = config.SUPPORT_CHAT_ID
-    
+
     user = None
     if supp_req.user:
-        user = crud.get_user_by_tg_id(db, supp_req.user.telegram_user.telegram)
+        with get_db() as db:
+            user = crud.get_user_by_tg_id(db, supp_req.user.telegram_user.telegram)
     
     if user:
         # reqs = crud.get_all_req_ids_by_user(db, user)
@@ -59,7 +60,8 @@ async def send_message_to_admins(message: str):
         await asyncio.sleep(0.1)
 
 async def send_message_to_all_users(message: str):
-    users = crud.get_all_users(db)
+    with get_db() as db:
+        users = crud.get_all_users(db)
     for user in users:
         try:
             await bot.send_message(user.telegram_user.telegram, message)
@@ -79,21 +81,24 @@ async def get_user_from_request(message: str):
     try:
         user_id = await get_user_id_from_request(message)
         if user_id:
-            return crud.get_user_by_tg_id(db, user_id)
+            with get_db() as db:
+                return crud.get_user_by_tg_id(db, user_id)
     except:
         return None
     
 async def get_supp_request_from_message(message: str):
     try:
         supp_req_id = int(message.split('\n')[0].split(' ')[-1])
-        return crud.get_supp_request_by_id(db, supp_req_id)
+        with get_db() as db:
+            return crud.get_supp_request_by_id(db, supp_req_id)
     except:
         return None
     
 async def close_supp_request(message: str):
     supp_req = await get_supp_request_from_message(message)
     if supp_req:
-        crud.close_supp_request(db, supp_req)
+        with get_db() as db:
+            crud.close_supp_request(db, supp_req)
         await bot.send_message(supp_req.telegram_user.telegram, 'Ваша заявка в поддержку была закрыта.')
         return True
     return False
